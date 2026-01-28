@@ -6,6 +6,7 @@ AGENTS.md
 *.png
 *.npy
 *.ipynb
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
