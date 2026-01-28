@@ -45,7 +45,7 @@ class MupsSpring:
                 device=self.device
             )
 
-    def set_ups_params_from_design(self, param_names, param_values):
+    def set_ups_params_from_design(self, param_names, param_values, print_info=False):
         """Set UPS spring parameters from design optimization.
 
         Args:
@@ -55,6 +55,8 @@ class MupsSpring:
         for i, name in enumerate(param_names):
             if name in self.ups_param_dict:
                 self.ups_param_dict[name] = param_values[:, i]
+                if print_info:
+                    print(f"Set {name} to {self.ups_param_dict[name]}")
             else:
                 raise ValueError(f"Unknown UPS parameter name: {name}")
 
@@ -70,7 +72,7 @@ class MupsSpring:
         """
 
         # Build spring torque based on knee joint angle
-        spring_torque = torch.zeros((self.num_env, 2), device=self.device, dtype=self.dtype)
+        spring_torque = torch.zeros((self.num_envs, 2), device=self.device, dtype=self.dtype)
         knee_angle = -dof_pos[:, 1] - torch.pi / 2.0
 
         # Retrieve spring parameters from design
@@ -81,7 +83,7 @@ class MupsSpring:
         l3 = self.ups_param_dict["ups_l3"]
         l4 = self.ups_param_dict["ups_l4"]
         l5 = self.ups_param_dict["ups_l5"]
-        l6 = self.ups_param_dict["ups_l6"]        
+        l6 = self.ups_param_dict["ups_l6"]
 
         t2 = torch.cos(knee_angle)
         t3 = torch.sin(knee_angle)
