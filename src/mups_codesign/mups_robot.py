@@ -33,6 +33,9 @@ class MupsRobot:
         self.mups_spring = MupsSpring(config)
         self.design_objective = DesignObjective(config)
 
+    def set_design_params(self, param_names, param_values):
+        # param_values shape: (num_envs, active_dim) or (1, active_dim)
+        self.mups_spring.set_ups_params_from_design(param_names, param_values, print_info=False)
 
     def get_rot_mat_y(self, theta):
         c = torch.cos(theta)
@@ -90,7 +93,7 @@ class MupsRobot:
         return foot_jac
 
 
-    def step_srb_dynamics(self, root_state, dof_state, action, design_param):
+    def step_srb_dynamics(self, root_state, dof_state, action):
         # TODO vz and wy is inaccurate by a lot
 
         # Parse inputs
@@ -105,9 +108,7 @@ class MupsRobot:
 
         motor_torque = self.calc_joint_pd_torques(dof_pos, dof_vel, action)
 
-        # TODO: fix hardcoded design_param_names
-        design_param_names = ["ups_ks", "ups_l0"]
-        self.mups_spring.set_ups_params_from_design(design_param_names, design_param, print_info=False)
+        # * Caution: spring torque depends on design parameters
         spring_torque = self.mups_spring.calc_spring_torque(dof_pos)
 
         joint_torque = motor_torque + spring_torque

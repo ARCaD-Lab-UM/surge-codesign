@@ -123,6 +123,7 @@ if __name__ == '__main__':
 
         # Set design parameters for each environment
         env.set_design_params(design_params_opt_detached[None, :]) # (num_envs, num_params)
+        robot.set_design_params(design_space.active_param_names, design_space.active_param_values[None, :]) # keep grad
 
         # Task iterations
         for control_iter in range(N_CONTROL_ITER):
@@ -145,7 +146,6 @@ if __name__ == '__main__':
                 isaac_state,         #! non-diff, critical fix
                 dof_state.clone(),   # non-diff
                 actions,             # diff
-                design_params_opt[None, :]    # diff
             )
 
             # Update design objective sum

@@ -115,6 +115,7 @@ if __name__ == '__main__':
 
     # Set design parameters to the grid
     env.set_design_params(design_param_grid)
+    robot.set_design_params(design_space.active_param_names, design_param_grid) # no grad
 
     # Initialize state buffers
     with torch.no_grad():
@@ -139,8 +140,7 @@ if __name__ == '__main__':
             srb_state, srb_torque, design_objective, _ = robot.step_srb_dynamics(
                 isaac_state.clone(),
                 dof_state.clone(),
-                actions,
-                design_param_grid,
+                actions
             )
 
             # Step isaacgym dynamics
