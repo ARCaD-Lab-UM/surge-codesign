@@ -2,15 +2,20 @@
 Implementation of UPS spring torque calculations and default parameters.
 The calculation is parallelized over multiple environments.
 """
+
 import pdb
 import torch
 
 
 class MupsSpring:
     def __init__(self, num_envs, device="cpu", dtype=torch.float32):
+
+        # Configurable parameters
         self.num_envs = num_envs
         self.device = device
         self.dtype = dtype
+        self.softplus_beta = 1.0
+        self.softplus_threshold = 20.0
 
         # Changeable parameters
         self.ups_ks = 4115  # Spring stiffness (N/m)
@@ -90,12 +95,20 @@ class MupsSpring:
         t4 = l1 + l4
         t5 = torch.square(l2)
         t6 = t2 * t4
-        t7 = - t6
+        t7 = -t6
         t8 = l5 + t7
         t9 = torch.square(t8)
-        t10 = - t9
+        t10 = -t9
         t11 = t5 + t10
-        softplus = torch.nn.functional.softplus(l0 * 1.0e+3-l3 * 1.0e+3+l6 * 1.0e+3+t3 * t4 * 1.0e+3+torch.sqrt(t11) * 1.0e+3)
+        softplus = torch.nn.functional.softplus(
+            l0 * 1.0e3
+            - l3 * 1.0e3
+            + l6 * 1.0e3
+            + t3 * t4 * 1.0e3
+            + torch.sqrt(t11) * 1.0e3,
+            beta=self.softplus_beta,
+            threshold=self.softplus_threshold
+        )
         tau = (ks * softplus * (t6 - t3 * t4 * t8 * 1.0 / torch.sqrt(t11))) / 1.0e+3
 
         try:
