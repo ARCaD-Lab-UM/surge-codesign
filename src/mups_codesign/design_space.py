@@ -75,6 +75,10 @@ class DesignSpace:
     @property
     def active_param_values(self):
         return self.active_normalized_param_values * self.active_param_scales
+    
+    @property
+    def detached_active_param_values(self):
+        return self.active_param_values.detach()
 
     @property
     def active_param_bounds(self):

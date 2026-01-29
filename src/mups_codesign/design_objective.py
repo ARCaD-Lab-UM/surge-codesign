@@ -34,7 +34,7 @@ class DesignObjective:
         """Calculate energy related objectives
 
         Args:
-            dof_state (tensor): (num_envs, 6)
+            dof_state (tensor): (num_envs, 4)
             motor_torque (tensor): (num_envs, 2)
         """
 
@@ -84,7 +84,7 @@ class DesignObjective:
 
         Args:
             srb_state (tensor): (num_envs, 13)
-            dof_state (tensor): (num_envs, 6)
+            dof_state (tensor): (num_envs, 4)
             motor_torque (tensor): (num_envs, 2)
         """
 
