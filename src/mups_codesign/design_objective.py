@@ -80,7 +80,7 @@ class DesignObjective:
 
         return tracking_components
 
-    def calc_design_objective(self, srb_state, dof_state, motor_torque):
+    def calc_objective(self, srb_state, dof_state, motor_torque):
         """Calculate design objective
 
         Args:
