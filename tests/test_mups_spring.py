@@ -6,10 +6,24 @@ from mups_codesign.design_space import DesignSpace
 from mups_codesign.mups_spring import MupsSpring
 
 
-if __name__ == "__main__":
-    torch.set_printoptions(precision=4, sci_mode=False)
+def _assert_requires_grad(tag, spring_torque):
+    assert spring_torque.requires_grad, f"{tag} spring torque should require grad"
 
-    device = torch.device("cpu")
+
+def _test_gradient_preserving(device):
+    mups_spring = MupsSpring(num_envs=1, device=device)
+    design_space = DesignSpace(active_dim=2, device=device)
+    active_param_names = design_space.get_active_param_names()
+
+    random_params = torch.randn((1, design_space.active_dim), device=device, requires_grad=True)
+    mups_spring.set_ups_params_from_design(active_param_names, random_params, print_info=True)
+
+    dof_pos = torch.randn((1, 2), device=device)
+    spring_torque = mups_spring.calc_spring_torque(dof_pos)
+    _assert_requires_grad("Random input", spring_torque)
+
+
+def _plot_bounds_from_design_space(device):
     design_space = DesignSpace(active_dim=2, device=device)
     mups_spring = MupsSpring(num_envs=1, device=device)
 
@@ -38,11 +52,15 @@ if __name__ == "__main__":
 
     # Lower bound
     print("Setting UPS spring parameters to lower bound of design space:")
-    mups_spring.set_ups_params_from_design(active_param_names, param_bounds[:, 0].unsqueeze(0), print_info=True)
-    for i, knee_pos in enumerate(knee_pos_span):
+    mups_spring.set_ups_params_from_design(
+        active_param_names,
+        param_bounds[:, 0].unsqueeze(0),
+        print_info=True
+    )
+    for knee_pos in knee_pos_span:
         dof_pos = torch.tensor([[0.0, knee_pos]], device=device)
         spring_torque = mups_spring.calc_spring_torque(dof_pos)
-        axes[0].scatter(knee_pos.item(), spring_torque[0, 1].item(), color='blue')
+        axes[0].scatter(knee_pos.item(), spring_torque[0, 1].item(), color="blue")
 
     axes[0].set_title("Spring Torque at Lower Bound of Design Space")
     axes[0].set_xlabel("Knee Position (rad)")
@@ -51,11 +69,15 @@ if __name__ == "__main__":
 
     # Upper bound
     print("Setting UPS spring parameters to upper bound of design space:")
-    mups_spring.set_ups_params_from_design(active_param_names, param_bounds[:, 1].unsqueeze(0), print_info=True)
-    for i, knee_pos in enumerate(knee_pos_span):
+    mups_spring.set_ups_params_from_design(
+        active_param_names,
+        param_bounds[:, 1].unsqueeze(0),
+        print_info=True
+    )
+    for knee_pos in knee_pos_span:
         dof_pos = torch.tensor([[0.0, knee_pos]], device=device)
         spring_torque = mups_spring.calc_spring_torque(dof_pos)
-        axes[1].scatter(knee_pos.item(), spring_torque[0, 1].item(), color='red')
+        axes[1].scatter(knee_pos.item(), spring_torque[0, 1].item(), color="red")
 
     axes[1].set_title("Spring Torque at Upper Bound of Design Space")
     axes[1].set_xlabel("Knee Position (rad)")
@@ -64,3 +86,13 @@ if __name__ == "__main__":
 
     plt.tight_layout()
     plt.show()
+
+
+if __name__ == "__main__":
+    torch.set_printoptions(precision=4, sci_mode=False)
+    torch.manual_seed(0)
+
+    device = torch.device("cpu")
+
+    _test_gradient_preserving(device)
+    _plot_bounds_from_design_space(device)
