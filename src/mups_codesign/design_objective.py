@@ -6,6 +6,7 @@ import torch
 
 from mups_codesign.config import CodesignConfig
 
+
 class DesignObjective:
     def __init__(self, config: CodesignConfig):
 

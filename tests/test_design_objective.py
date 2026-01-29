@@ -1,5 +1,5 @@
-import torch
 import pytest
+import torch
 
 from mups_codesign.config import CodesignConfig
 from mups_codesign.design_objective import DesignObjective

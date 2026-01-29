@@ -1,10 +1,12 @@
 """Include MUPS robot dynamics and kinematics."""
 
 import pdb
+
 import torch
 
 from mups_codesign.config import CodesignConfig
 from mups_codesign.mups_spring import MupsSpring
+
 
 class MupsRobot:
     def __init__(self, config: CodesignConfig):

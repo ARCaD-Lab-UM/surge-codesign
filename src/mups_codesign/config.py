@@ -2,9 +2,10 @@
 Dataclass configs for: design space, optimizer (GD + CMA-ES), logging.
 """
 
+from dataclasses import dataclass
+
 import torch
 
-from dataclasses import dataclass
 
 @dataclass
 class CodesignConfig:
