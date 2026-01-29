@@ -24,6 +24,8 @@ from mups_codesign.mups_robot import MupsRobot
 from mups_codesign.config import CodesignConfig
 from mups_codesign.design_space import DesignSpace
 from mups_codesign.design_objective import DesignObjective
+from mups_codesign.optim_helper import rollout_control_loop
+
 from mups_codesign.isaac_env.hopper_standalone import HopperStandalone
 from mups_codesign.isaac_env.hopper_standalone_config import HopperStandaloneCfg, HopperStandaloneCfgPPO
 
@@ -67,35 +69,33 @@ if __name__ == '__main__':
     env_cfg.commands.ranges.lin_vel_x = [0.0, 0.0]
     env_cfg.commands.ranges.lin_vel_y = [0.0, 0.0]
 
-    # Make environment
+    # Make isaacgym environment
     env, _ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
-
-    # Initialize design parameterized robot model
-    design_config = CodesignConfig(num_envs=env.num_envs, device=env.device, dtype=torch.float32)
-    design_objective_calculator = DesignObjective(design_config)
-    srb_env = MupsRobot(design_config)
 
     # Load control policy in inference mode
     train_cfg.runner.resume = True
     ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args, train_cfg=train_cfg)
     control_policy = ppo_runner.get_inference_policy(device=env.device)
 
-    # Initialize design optimization
+    # Codesign parameters
     N_DESIGN_ITER = 50
     N_CONTROL_ITER = 100
-
+    LEARN_RATE = 5e-2
     print(f"Design Iterations: {N_DESIGN_ITER}, Control Iterations: {N_CONTROL_ITER}")
 
     initial_design_params = torch.tensor([3000, 0.1], device=env.device)
     print(f"Initial Design Parameters: {initial_design_params}")
 
-    # TODO: refactor this
+    #* Initialize codesign modules
+    design_config = CodesignConfig(num_envs=env.num_envs, device=env.device, dtype=torch.float32)
+    srb_env = MupsRobot(design_config)
+    design_objective_calculator = DesignObjective(design_config)
     design_space = DesignSpace(design_config, initial_design_params)
 
     design_params_normalized = design_space.active_normalized_param_values  # nn.Parameter of shape (num_params, )
 
     # First-order optimizer
-    optimizer = optim.Adam([design_params_normalized], lr=5e-2)
+    optimizer = optim.Adam([design_params_normalized], lr=LEARN_RATE)
 
     f_best_log = []
     x_best_log = [initial_design_params.cpu().numpy()]
@@ -104,80 +104,15 @@ if __name__ == '__main__':
     for design_iter in tqdm(range(N_DESIGN_ITER), desc="Design Iteration", ncols=80, file=sys.stdout):
         print("") # Flush a newline after tqdm progress bar
 
-        total_design_objective = torch.zeros(env.num_envs, device=env.device)
-        objective_term_sums = defaultdict(float)
-
-        # Initialize environment and its buffers
-        with torch.no_grad():
-            env.reset()
-            obs = env.get_observations()
-            privileged_obs = env.get_privileged_observations()
-            critic_obs = env.get_critic_observations()
-            estimated_obs = env.get_estimated_observations()
-            scan_obs = env.get_scan_observations()
-            isaac_state = env.root_states.clone()
-            dof_state = torch.hstack([env.dof_pos, env.dof_vel]).clone()
-
-        # Optimized design parameters (requires grad)
-        design_params_opt = design_space.active_param_values
-        design_params_opt_detached = design_params_opt.detach()
-
-        # Set design parameters for each environment
-        env.set_design_params(design_params_opt_detached[None, :]) # (num_envs, num_params)
-        srb_env.set_design_params(design_space.active_param_names, design_space.active_param_values[None, :]) # keep grad
-
-        # Task iterations
-        for control_iter in range(N_CONTROL_ITER):
-            time_start = time.time()
-
-            # Step control policy
-            #* Use the normalized design parameters as the privi_obs has to be clipped
-            modified_privileged_obs = torch.cat(
-                (
-                    privileged_obs[:, :-2],
-                    design_params_normalized.unsqueeze(0).expand(env.num_envs, -1),
-                ),
-                dim=-1,
-            )
-
-            actions = control_policy(obs, modified_privileged_obs, estimated_obs, scan_obs, adaptation_mode=False)
-
-            # Step SRB dynamics
-            srb_state, motor_torque = srb_env.step_srb_dynamics(
-                isaac_state,    #! non-diff, critical fix
-                dof_state,      # non-diff
-                actions,        # diff
-            )
-
-            design_objective, objective_terms = design_objective_calculator.calc_objective(
-                srb_state,      # diff
-                dof_state,      # non-diff
-                motor_torque    # diff
-            )
-
-            # Update design objective sum
-            total_design_objective = total_design_objective + design_objective
-            
-            # Update logging
-            for name, value in objective_terms.items():
-                objective_term_sums[name] += value.mean().item()
-
-            # Now we step isaacgym dynamics
-            with torch.no_grad():
-                obs, privileged_obs, critic_obs, estimated_obs, scan_obs, rews, dones, infos = env.step(actions)
-                isaac_state = env.root_states.clone()
-                dof_state = torch.hstack([env.dof_pos, env.dof_vel]).clone()
-
-            # Naive state alignment
-            next_state = isaac_state + 0.9 * (srb_state - srb_state.detach())
-
-            # Handle real time rendering
-            if not args.headless:
-                # Block rendering to wall clock
-                time_elapsed = time.time() - time_start
-                time_until_next_step = env.dt - time_elapsed
-                if time_until_next_step > 0:
-                    time.sleep(time_until_next_step)
+        total_design_objective, objective_term_sums = rollout_control_loop(
+            env,
+            control_policy,
+            srb_env,
+            design_space,
+            design_objective_calculator,
+            N_CONTROL_ITER,
+            headless=args.headless
+        )
 
         # Backprop
         optimizer.zero_grad()
