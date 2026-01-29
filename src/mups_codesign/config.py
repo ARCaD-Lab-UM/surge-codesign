@@ -19,3 +19,6 @@ class CodesignConfig:
     # MUPS spring config
     softplus_beta: float = 1.0
     softplus_threshold: float = 20.0
+
+    # Design objective config
+    use_log1p: bool = True
