@@ -26,11 +26,11 @@ class DesignObjective:
         # Multi-objective weights
         self.objective_weights = {
             "heating_energy": 1.0,
-            "mechanical_energy": 1.0,
-            "height_tracking_error": 1.0,
+            "mechanical_energy": 3.0,
+            "height_tracking_error": 10.0,
         }
 
-    def calc_energy_consumption(self, dof_state, motor_torque):
+    def _calc_energy_consumption(self, dof_state, motor_torque):
         """Calculate energy related objectives
 
         Args:
@@ -47,25 +47,24 @@ class DesignObjective:
 
         mech_power = (motor_torque * dof_vel).sum(dim=-1) # (num_env, )
         positive_mech_power = mech_power.clamp(min=0.0)
-        mechanical_energy = positive_mech_power
+        mechanical_energy = positive_mech_power * self.dt
         if self.use_log1p:
             mechanical_energy = torch.log1p(mechanical_energy)
 
         heat_power = motor_torque.square().sum(dim=-1) * self.motor_resistance / (self.motor_torque_constant**2) # (num_env, )
-        heating_energy = heat_power
+        heating_energy = heat_power * self.dt
         if self.use_log1p:
             heating_energy = torch.log1p(heating_energy)
 
-        # TODO: dt is multiplied after log1p, check if the fixed version works
         energy_components = {
-            "mechanical_energy": mechanical_energy * self.dt,
-            "heating_energy": heating_energy * self.dt,
+            "mechanical_energy": mechanical_energy,
+            "heating_energy": heating_energy,
         }
 
 
         return energy_components
 
-    def calc_tracking_error(self, srb_state):
+    def _calc_tracking_error(self, srb_state):
         """Calculate tracking error objective
 
         Args:
@@ -90,10 +89,10 @@ class DesignObjective:
         """
 
         # Energy components
-        energy_components = self.calc_energy_consumption(dof_state, motor_torque)
+        energy_components = self._calc_energy_consumption(dof_state, motor_torque)
 
         # Tracking components
-        tracking_components = self.calc_tracking_error(srb_state)
+        tracking_components = self._calc_tracking_error(srb_state)
 
         # Combine all components
         all_components = {**energy_components, **tracking_components}
