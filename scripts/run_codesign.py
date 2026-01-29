@@ -21,6 +21,8 @@ from legged_gym.envs import *
 from legged_gym.utils import get_args, task_registry
 
 from mups_codesign.mups_robot import MupsRobot
+from mups_codesign.config import CodesignConfig
+from mups_codesign.design_space import DesignSpace
 from mups_codesign.isaac_env.hopper_standalone import HopperStandalone
 from mups_codesign.isaac_env.hopper_standalone_config import HopperStandaloneCfg, HopperStandaloneCfgPPO
 
@@ -68,7 +70,8 @@ if __name__ == '__main__':
     env, _ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
 
     # Initialize design parameterized robot model
-    robot = MupsRobot(num_env=env.num_envs, device=env.device)
+    design_config = CodesignConfig(num_envs=env.num_envs, device=env.device, dtype=torch.float32)
+    robot = MupsRobot(design_config)
 
     # Load control policy in inference mode
     train_cfg.runner.resume = True
@@ -84,9 +87,10 @@ if __name__ == '__main__':
     initial_design_params = torch.tensor([3000, 0.1], device=env.device)
     print(f"Initial Design Parameters: {initial_design_params}")
 
-    design_params_normalized = nn.Parameter(
-        initial_design_params / robot.design_param_scale, requires_grad=True
-    ) # (num_params, )
+    # TODO: refactor this
+    design_space = DesignSpace(design_config, initial_design_params)
+
+    design_params_normalized = design_space.active_normalized_param_values  # nn.Parameter of shape (num_params, )
 
     # First-order optimizer
     optimizer = optim.Adam([design_params_normalized], lr=5e-2)
@@ -114,7 +118,7 @@ if __name__ == '__main__':
             # next_state = isaac_state.clone()
 
         # Optimized design parameters (requires grad)
-        design_params_opt = design_params_normalized * robot.design_param_scale  # (num_params, )
+        design_params_opt = design_space.active_param_values
         design_params_opt_detached = design_params_opt.detach()
 
         # Set design parameters for each environment
@@ -141,7 +145,7 @@ if __name__ == '__main__':
                 isaac_state,         #! non-diff, critical fix
                 dof_state.clone(),   # non-diff
                 actions,             # diff
-                design_params_opt    # diff
+                design_params_opt[None, :]    # diff
             )
 
             # Update design objective sum
@@ -180,11 +184,11 @@ if __name__ == '__main__':
         # Step optimizer
         optimizer.step()
 
-        design_params_normalized.data.clamp_(robot.design_param_bound[:, 0], robot.design_param_bound[:, 1])
+        design_space.project_active_params_into_bounds()
 
         # Update optmization logs
         f_best = loss.item()
-        x_best = (design_params_normalized.detach() * robot.design_param_scale).cpu().numpy()
+        x_best = design_space.active_param_values.detach().cpu().numpy()
         f_best_log.append(f_best)
         x_best_log.append(x_best)
 

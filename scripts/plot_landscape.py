@@ -14,6 +14,8 @@ from legged_gym.envs import *
 from legged_gym.utils import get_args, task_registry
 
 from mups_codesign.mups_robot import MupsRobot
+from mups_codesign.config import CodesignConfig
+from mups_codesign.design_space import DesignSpace
 from mups_codesign.isaac_env.hopper_standalone import HopperStandalone
 from mups_codesign.isaac_env.hopper_standalone_config import HopperStandaloneCfg, HopperStandaloneCfgPPO
 
@@ -54,7 +56,8 @@ if __name__ == '__main__':
     env, _ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
 
     # Initialize design parameterized robot model
-    robot = MupsRobot(num_env=env.num_envs, device=env.device)
+    design_config = CodesignConfig(num_envs=env.num_envs, device=env.device, dtype=torch.float32)
+    robot = MupsRobot(design_config)
 
     # Load control policy in inference mode
     train_cfg.runner.resume = True
@@ -66,7 +69,11 @@ if __name__ == '__main__':
     num_grid = np.sqrt(env.num_envs).astype(int)
     assert num_grid**2 == env.num_envs, "For grid design, num_envs should be a perfect square"
 
-    design_param_range = robot.design_param_bound * robot.design_param_scale.unsqueeze(-1)
+
+    # TODO: refactor this
+    design_space = DesignSpace(design_config)
+
+    design_param_range = design_space.active_param_bounds.cpu().numpy()  # (2, 2)
 
     param1_span = torch.linspace(
         design_param_range[0, 0], 
@@ -133,7 +140,7 @@ if __name__ == '__main__':
                 isaac_state.clone(),
                 dof_state.clone(),
                 actions,
-                design_param_grid.T,
+                design_param_grid,
             )
 
             # Step isaacgym dynamics

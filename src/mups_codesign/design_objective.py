@@ -47,21 +47,21 @@ class DesignObjective:
 
         mech_power = (motor_torque * dof_vel).sum(dim=-1) # (num_env, )
         positive_mech_power = mech_power.clamp(min=0.0)
-        mechanical_energy = positive_mech_power * self.dt
+        mechanical_energy = positive_mech_power
         if self.use_log1p:
             mechanical_energy = torch.log1p(mechanical_energy)
 
         heat_power = motor_torque.square().sum(dim=-1) * self.motor_resistance / (self.motor_torque_constant**2) # (num_env, )
-        heating_energy = heat_power * self.dt
+        heating_energy = heat_power
         if self.use_log1p:
             heating_energy = torch.log1p(heating_energy)
 
+        # TODO: dt is multiplied after log1p, check if the fixed version works
         energy_components = {
-            "mechanical_energy": mechanical_energy,
-            "heating_energy": heating_energy,
+            "mechanical_energy": mechanical_energy * self.dt,
+            "heating_energy": heating_energy * self.dt,
         }
 
-        # TODO: dt was multiplied after log1p in previous version, check if this one works
 
         return energy_components
 
