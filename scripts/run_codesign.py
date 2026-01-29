@@ -203,7 +203,7 @@ if __name__ == '__main__':
     print("Design Optimization Completed.")
 
     # Save intermediate design parameters and objective logs to file
-    log_file = f"design_optimization_logs_{time.strftime('%Y%m%d_%H%M%S')}.npz"
+    log_file = f"{design_config.log_dir}design_optimization_logs_{time.strftime('%Y%m%d_%H%M%S')}.npz"
     np.savez(log_file, 
              f_best_log=np.array(f_best_log), 
              x_best_log=np.array(x_best_log))

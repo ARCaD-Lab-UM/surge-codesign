@@ -186,7 +186,7 @@ if __name__ == '__main__':
     opt_objective = design_objective_grid[min_idx[0], min_idx[1]]
 
     # Find the latest optimization log file
-    log_pattern = "design_optimization_logs_*.npz"
+    log_pattern = f"{design_config.log_dir}design_optimization_logs_*.npz"
     log_files = glob.glob(log_pattern)
     if log_files:
         latest_log_file = max(log_files, key=os.path.getctime)
