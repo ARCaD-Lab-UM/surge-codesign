@@ -10,30 +10,32 @@ from mups_codesign.config import CodesignConfig
 
 
 class DesignSpace:
+    PARAM_NAMES = (
+        "ups_ks",  # Spring stiffness (N/m)
+        "ups_l0",  # Spring rest length (m)
+        "ups_l2",  # Parallel linkage length (m)
+        "ups_l4",  # Parallel linkage offset from knee joint (m)
+    )
+    PARAM_VALUES = (
+        4115,   # ups_ks
+        0.138,  # ups_l0
+        0.1,    # ups_l2
+        0.02,   # ups_l4
+    )
+
     def __init__(self, config: CodesignConfig, init_param_values: Tensor=None, requires_grad: bool=True):
 
         # Configurable parameters
         self.device = config.device
         self.dtype = config.dtype
 
-        # Available design parameters
-        self.param_names = [
-            "ups_ks",  # Spring stiffness (N/m)
-            "ups_l0",  # Spring rest length (m)
-            "ups_l2",  # Parallel linkage length (m)
-            "ups_l4",  # Parallel linkage offset from knee joint (m)
-        ]
-
+        # Available design parameter names and default values
+        self.param_names = self.PARAM_NAMES
         self.default_param_values = torch.tensor(
-            [
-                4115,   # ups_ks
-                0.138,  # ups_l0
-                0.1,    # ups_l2
-                0.02,   # ups_l4
-            ],
+            self.PARAM_VALUES,
             dtype=self.dtype,
             device=self.device
-        )
+        )  # (num_params, )
 
         self.normalized_param_bounds = torch.tensor(
             [

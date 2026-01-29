@@ -7,6 +7,7 @@ import pdb
 import torch
 
 from mups_codesign.config import CodesignConfig
+from mups_codesign.design_space import DesignSpace
 
 
 class MupsSpring:
@@ -19,40 +20,28 @@ class MupsSpring:
         self.softplus_beta = config.softplus_beta
         self.softplus_threshold = config.softplus_threshold
 
-        # Changeable parameters
-        self.ups_ks = 4115  # Spring stiffness (N/m)
-        self.ups_l0 = 0.138 # Spring rest length (m)
-        self.ups_l2 = 0.1   # Parallel linkage length (m)
-        self.ups_l4 = 0.02  # Parallel linkage offset from knee joint (m)
-
         # Fixed parameters
         self.ups_l1 = 0.03  # Parallelogram short side (m)
         self.ups_l3 = 0.22  # Parallelogram long side (m)
         self.ups_l5 = 0.01  # Orthogonal offset from slider (m)
         self.ups_l6 = 0.003 # Parallel offset from slider (m)
 
-        self.ups_param_dict = {
-            "ups_ks": self.ups_ks,
-            "ups_l0": self.ups_l0,
-            "ups_l2": self.ups_l2,
-            "ups_l4": self.ups_l4,
+        # Fetch default changeable parameters and build the param dict
+        names = DesignSpace.PARAM_NAMES # tuple of str
+        values = DesignSpace.PARAM_VALUES # tuple of float
+        assert len(names) == len(values), "DesignSpace PARAM_NAMES/PARAM_VALUES length mismatch"
+        self.design_param_dict = {name: value for name, value in zip(names, values)}
 
-            "ups_l1": self.ups_l1,
-            "ups_l3": self.ups_l3,
-            "ups_l5": self.ups_l5,
-            "ups_l6": self.ups_l6,
-        }
-
-        # Vectorize param dict to (num_envs, num_params)
-        for key in self.ups_param_dict.keys():
-            self.ups_param_dict[key] = torch.full(
+        # Vectorize param dict to tensor in shape (num_envs, num_params)
+        for key in self.design_param_dict.keys():
+            self.design_param_dict[key] = torch.full(
                 (self.num_envs,),
-                self.ups_param_dict[key],
+                self.design_param_dict[key],
                 dtype=self.dtype,
                 device=self.device
             )
 
-    def set_ups_params_from_design(self, param_names, param_values, print_info=False):
+    def update_design_param_dict(self, param_names, param_values, print_info=False):
         """Set UPS spring parameters from design optimization.
 
         Args:
@@ -60,10 +49,10 @@ class MupsSpring:
             param_values (tensor): (num_envs, num_params) Tensor of parameter values.
         """
         for i, name in enumerate(param_names):
-            if name in self.ups_param_dict:
-                self.ups_param_dict[name] = param_values[:, i]
+            if name in self.design_param_dict:
+                self.design_param_dict[name] = param_values[:, i]
                 if print_info:
-                    print(f"Set {name} to {self.ups_param_dict[name]}")
+                    print(f"Set {name} to {self.design_param_dict[name]}")
             else:
                 raise ValueError(f"Unknown UPS parameter name: {name}")
 
@@ -83,14 +72,14 @@ class MupsSpring:
         knee_angle = -dof_pos[:, 1] - torch.pi / 2.0
 
         # Retrieve spring parameters from design
-        ks = self.ups_param_dict["ups_ks"]
-        l0 = self.ups_param_dict["ups_l0"]
-        l1 = self.ups_param_dict["ups_l1"]
-        l2 = self.ups_param_dict["ups_l2"]
-        l3 = self.ups_param_dict["ups_l3"]
-        l4 = self.ups_param_dict["ups_l4"]
-        l5 = self.ups_param_dict["ups_l5"]
-        l6 = self.ups_param_dict["ups_l6"]
+        ks = self.design_param_dict["ups_ks"]
+        l0 = self.design_param_dict["ups_l0"]
+        l1 = self.ups_l1
+        l2 = self.design_param_dict["ups_l2"]
+        l3 = self.ups_l3
+        l4 = self.design_param_dict["ups_l4"]
+        l5 = self.ups_l5
+        l6 = self.ups_l6
 
         t2 = torch.cos(knee_angle)
         t3 = torch.sin(knee_angle)

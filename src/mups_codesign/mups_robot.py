@@ -35,7 +35,7 @@ class MupsRobot:
 
     def set_design_params(self, param_names, param_values):
         # param_values shape: (num_envs, active_dim) or (1, active_dim)
-        self.mups_spring.set_ups_params_from_design(param_names, param_values, print_info=False)
+        self.mups_spring.update_design_param_dict(param_names, param_values, print_info=False)
 
     def get_rot_mat_y(self, theta):
         c = torch.cos(theta)
