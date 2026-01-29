@@ -1,5 +1,6 @@
 import torch
 
+from mups_codesign.config import CodesignConfig
 from mups_codesign.design_objective import DesignObjective
 
 
@@ -20,12 +21,12 @@ def _run_case(use_log1p):
     torch.set_printoptions(precision=4, sci_mode=False)
     torch.manual_seed(0)
 
-    device = torch.device("cpu")
-    dtype = torch.float32
-    num_envs = 4
+    cfg = CodesignConfig(num_envs=4, device="cpu", dtype=torch.float32, use_log1p=use_log1p)
+    device = torch.device(cfg.device)
+    dtype = cfg.dtype
+    num_envs = cfg.num_envs
 
-    obj = DesignObjective(num_envs=num_envs, device=device, dtype=dtype)
-    obj.use_log1p = use_log1p
+    obj = DesignObjective(cfg)
 
     # Fake states with gradients enabled
     srb_state = torch.randn((num_envs, 13), device=device, dtype=dtype, requires_grad=True)

@@ -6,16 +6,18 @@ The calculation is parallelized over multiple environments.
 import pdb
 import torch
 
+from mups_codesign.config import CodesignConfig
+
 
 class MupsSpring:
-    def __init__(self, num_envs, device="cpu", dtype=torch.float32):
+    def __init__(self, config: CodesignConfig):
 
         # Configurable parameters
-        self.num_envs = num_envs
-        self.device = device
-        self.dtype = dtype
-        self.softplus_beta = 1.0
-        self.softplus_threshold = 20.0
+        self.num_envs = config.num_envs
+        self.device = config.device
+        self.dtype = config.dtype
+        self.softplus_beta = config.softplus_beta
+        self.softplus_threshold = config.softplus_threshold
 
         # Changeable parameters
         self.ups_ks = 4115  # Spring stiffness (N/m)

@@ -1,14 +1,19 @@
 import pdb
 import torch
 
+from mups_codesign.config import CodesignConfig
 from mups_codesign.design_space import DesignSpace
 
 
 if __name__ == "__main__":
     torch.set_printoptions(precision=4, sci_mode=False)
 
-    device = torch.device("cpu")
-    design_space = DesignSpace(active_dim=2, device=device)
+    config = CodesignConfig(
+        active_dim=2,
+        device="cpu",
+        dtype=torch.float32
+    )
+    design_space = DesignSpace(config)
 
     active_param_names = design_space.get_active_param_names()
     active_param_bounds = design_space.get_active_param_bounds()

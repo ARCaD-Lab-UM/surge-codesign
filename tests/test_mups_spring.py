@@ -2,17 +2,19 @@ import torch
 
 import matplotlib.pyplot as plt
 
-from mups_codesign.design_space import DesignSpace
+from mups_codesign.config import CodesignConfig
 from mups_codesign.mups_spring import MupsSpring
+from mups_codesign.design_space import DesignSpace
 
 
 def _assert_requires_grad(tag, spring_torque):
     assert spring_torque.requires_grad, f"{tag} spring torque should require grad"
 
 
-def _test_gradient_preserving(device):
-    mups_spring = MupsSpring(num_envs=1, device=device)
-    design_space = DesignSpace(active_dim=2, device=device)
+def _test_gradient_preserving(cfg):
+    device = torch.device(cfg.device)
+    mups_spring = MupsSpring(cfg)
+    design_space = DesignSpace(cfg)
     active_param_names = design_space.get_active_param_names()
 
     random_params = torch.randn((1, design_space.active_dim), device=device, requires_grad=True)
@@ -23,9 +25,10 @@ def _test_gradient_preserving(device):
     _assert_requires_grad("Random input", spring_torque)
 
 
-def _plot_bounds_from_design_space(device):
-    design_space = DesignSpace(active_dim=2, device=device)
-    mups_spring = MupsSpring(num_envs=1, device=device)
+def _plot_bounds_from_design_space(cfg):
+    device = torch.device(cfg.device)
+    design_space = DesignSpace(cfg)
+    mups_spring = MupsSpring(cfg)
 
     active_param_names = design_space.get_active_param_names()
     param_values = design_space.default_params[:design_space.active_dim].unsqueeze(0)
@@ -92,7 +95,7 @@ if __name__ == "__main__":
     torch.set_printoptions(precision=4, sci_mode=False)
     torch.manual_seed(0)
 
-    device = torch.device("cpu")
+    cfg = CodesignConfig(num_envs=1, device="cpu", active_dim=2)
 
-    _test_gradient_preserving(device)
-    _plot_bounds_from_design_space(device)
+    _test_gradient_preserving(cfg)
+    _plot_bounds_from_design_space(cfg)

@@ -9,7 +9,7 @@ from dataclasses import dataclass
 @dataclass
 class CodesignConfig:
     # General config
-    num_envs: int = 4096
+    num_envs: int = 1024
     device: str = "cuda:0"
     dtype: str = torch.float32
 

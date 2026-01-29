@@ -4,9 +4,11 @@ Single source of truth for design parameters: names, defaults, bounds, scaling, 
 
 import torch
 
+from mups_codesign.config import CodesignConfig
+
 
 class DesignSpace:
-    def __init__(self, active_dim=2, device="cpu", dtype=torch.float32):
+    def __init__(self, config: CodesignConfig):
 
         # Available design parameters
         self.param_names = [
@@ -17,12 +19,12 @@ class DesignSpace:
         ]
 
         # Configurable parameters
-        self.device = device
-        self.dtype = dtype
-        self.active_dim = active_dim
+        self.device = config.device
+        self.dtype = config.dtype
+        self.active_dim = config.active_dim
 
-        assert active_dim >= 1, "Active design dimension must be at least 1."
-        assert active_dim <= len(self.param_names), "Active design dimension cannot exceed total number of design parameters."
+        assert config.active_dim >= 1, "Active design dimension must be at least 1."
+        assert config.active_dim <= len(self.param_names), "Active design dimension cannot exceed total number of design parameters."
 
         self.default_params = torch.tensor(
             [

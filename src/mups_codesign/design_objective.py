@@ -4,15 +4,16 @@ One function that returns objective, components from SRB + policy rollout. No mo
 
 import torch
 
+from mups_codesign.config import CodesignConfig
 
 class DesignObjective:
-    def __init__(self, num_envs, device="cpu", dtype=torch.float32):
+    def __init__(self, config: CodesignConfig):
 
         # Configurable parameters
-        self.num_envs = num_envs
-        self.device = device
-        self.dtype = dtype
-        self.use_log1p = True
+        self.num_envs = config.num_envs
+        self.device = config.device
+        self.dtype = config.dtype
+        self.use_log1p = config.use_log1p
 
         # Energy related parameters
         self.dt = 0.02 # 50 Hz per data point
