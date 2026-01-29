@@ -16,7 +16,7 @@ class DesignObjective:
         self.use_log1p = config.use_log1p
 
         # Energy related parameters
-        self.dt = 0.02 # 50 Hz per data point
+        self.dt = config.dt
         self.motor_resistance = 0.17
         self.motor_torque_constant = 0.945
 

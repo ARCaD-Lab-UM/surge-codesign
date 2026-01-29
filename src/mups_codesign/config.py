@@ -22,3 +22,4 @@ class CodesignConfig:
 
     # Design objective config
     use_log1p: bool = True
+    dt: float = 0.02  # Time step
