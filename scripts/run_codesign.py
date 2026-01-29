@@ -23,6 +23,7 @@ from legged_gym.utils import get_args, task_registry
 from mups_codesign.mups_robot import MupsRobot
 from mups_codesign.config import CodesignConfig
 from mups_codesign.design_space import DesignSpace
+from mups_codesign.design_objective import DesignObjective
 from mups_codesign.isaac_env.hopper_standalone import HopperStandalone
 from mups_codesign.isaac_env.hopper_standalone_config import HopperStandaloneCfg, HopperStandaloneCfgPPO
 
@@ -71,7 +72,8 @@ if __name__ == '__main__':
 
     # Initialize design parameterized robot model
     design_config = CodesignConfig(num_envs=env.num_envs, device=env.device, dtype=torch.float32)
-    robot = MupsRobot(design_config)
+    design_objective_calculator = DesignObjective(design_config)
+    srb_env = MupsRobot(design_config)
 
     # Load control policy in inference mode
     train_cfg.runner.resume = True
@@ -79,7 +81,7 @@ if __name__ == '__main__':
     control_policy = ppo_runner.get_inference_policy(device=env.device)
 
     # Initialize design optimization
-    N_DESIGN_ITER = 100
+    N_DESIGN_ITER = 50
     N_CONTROL_ITER = 100
 
     print(f"Design Iterations: {N_DESIGN_ITER}, Control Iterations: {N_CONTROL_ITER}")
@@ -115,7 +117,6 @@ if __name__ == '__main__':
             scan_obs = env.get_scan_observations()
             isaac_state = env.root_states.clone()
             dof_state = torch.hstack([env.dof_pos, env.dof_vel]).clone()
-            # next_state = isaac_state.clone()
 
         # Optimized design parameters (requires grad)
         design_params_opt = design_space.active_param_values
@@ -123,7 +124,7 @@ if __name__ == '__main__':
 
         # Set design parameters for each environment
         env.set_design_params(design_params_opt_detached[None, :]) # (num_envs, num_params)
-        robot.set_design_params(design_space.active_param_names, design_space.active_param_values[None, :]) # keep grad
+        srb_env.set_design_params(design_space.active_param_names, design_space.active_param_values[None, :]) # keep grad
 
         # Task iterations
         for control_iter in range(N_CONTROL_ITER):
@@ -142,10 +143,16 @@ if __name__ == '__main__':
             actions = control_policy(obs, modified_privileged_obs, estimated_obs, scan_obs, adaptation_mode=False)
 
             # Step SRB dynamics
-            srb_state, srb_torque, design_objective, objective_terms = robot.step_srb_dynamics(
-                isaac_state,         #! non-diff, critical fix
-                dof_state.clone(),   # non-diff
-                actions,             # diff
+            srb_state, motor_torque = srb_env.step_srb_dynamics(
+                isaac_state,    #! non-diff, critical fix
+                dof_state,      # non-diff
+                actions,        # diff
+            )
+
+            design_objective, objective_terms = design_objective_calculator.calc_objective(
+                srb_state,      # diff
+                dof_state,      # non-diff
+                motor_torque    # diff
             )
 
             # Update design objective sum

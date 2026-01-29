@@ -5,7 +5,6 @@ import torch
 
 from mups_codesign.config import CodesignConfig
 from mups_codesign.mups_spring import MupsSpring
-from mups_codesign.design_objective import DesignObjective
 
 class MupsRobot:
     def __init__(self, config: CodesignConfig):
@@ -31,13 +30,12 @@ class MupsRobot:
         self.torque_limit = 35.0
 
         self.mups_spring = MupsSpring(config)
-        self.design_objective = DesignObjective(config)
 
     def set_design_params(self, param_names, param_values):
         # param_values shape: (num_envs, active_dim) or (1, active_dim)
         self.mups_spring.update_design_param_dict(param_names, param_values, print_info=False)
 
-    def get_rot_mat_y(self, theta):
+    def _get_rot_mat_y(self, theta):
         c = torch.cos(theta)
         s = torch.sin(theta)
         rot_mat = torch.zeros((self.num_env, 3, 3), device=self.device)
@@ -53,7 +51,7 @@ class MupsRobot:
         return rot_mat
 
 
-    def calc_joint_pd_torques(self, dof_pos, dof_vel, action):
+    def _calc_joint_pd_torques(self, dof_pos, dof_vel, action):
         # Clip and scale actions
         clipped_action = torch.clip(action, -self.action_limit, self.action_limit)
         scaled_action = clipped_action * self.action_scale
@@ -65,7 +63,7 @@ class MupsRobot:
         return clipped_torque
 
 
-    def calc_foot_position(self, pos, pitch, dof_pos):
+    def _calc_foot_position(self, pos, pitch, dof_pos):
         q1 = dof_pos[:, 0]  # hip
         q2 = dof_pos[:, 1]  # knee
         
@@ -74,13 +72,13 @@ class MupsRobot:
         foot_pos_body[:, 0] = - self.l1 * torch.sin(q1) - self.l2 * torch.sin(q1 + q2)
         foot_pos_body[:, 2] = - self.l1 * torch.cos(q1) - self.l2 * torch.cos(q1 + q2)
 
-        rot_mat = self.get_rot_mat_y(pitch)
+        rot_mat = self._get_rot_mat_y(pitch)
         foot_pos_world = pos + torch.bmm(rot_mat, foot_pos_body.unsqueeze(-1)).squeeze(-1)
 
         return foot_pos_world
 
 
-    def calc_foot_jacobian(self, dof_pos):
+    def _calc_foot_jacobian(self, dof_pos):
         q1 = dof_pos[:, 0]  # hip
         q2 = dof_pos[:, 1]  # knee
 
@@ -106,7 +104,7 @@ class MupsRobot:
 
         pitch = torch.arcsin(2.0 * (quat[:, 3] * quat[:, 1]))
 
-        motor_torque = self.calc_joint_pd_torques(dof_pos, dof_vel, action)
+        motor_torque = self._calc_joint_pd_torques(dof_pos, dof_vel, action)
 
         # * Caution: spring torque depends on design parameters
         spring_torque = self.mups_spring.calc_spring_torque(dof_pos)
@@ -114,8 +112,8 @@ class MupsRobot:
         joint_torque = motor_torque + spring_torque
         clipped_torque = torch.clip(joint_torque, -self.torque_limit, self.torque_limit)
 
-        foot_pos = self.calc_foot_position(pos, pitch, dof_pos) # (num_envs, 3)
-        foot_jac = self.calc_foot_jacobian(dof_pos) # (num_envs, 2, 2)
+        foot_pos = self._calc_foot_position(pos, pitch, dof_pos) # (num_envs, 3)
+        foot_jac = self._calc_foot_jacobian(dof_pos) # (num_envs, 2, 2)
 
         is_contact = (foot_pos[:, 2] <= 0.008).unsqueeze(-1) # (num_envs, 1), True if in contact
 
@@ -150,8 +148,4 @@ class MupsRobot:
         srb_state = torch.hstack([new_pos, new_quat, new_lin_vel, new_ang_vel])
         assert srb_state.shape == root_state.shape, "SRB state shape mismatch"
 
-        design_objective, objective_components = self.design_objective.calc_objective(
-            srb_state, dof_state, motor_torque
-        )
-
-        return srb_state, motor_torque, design_objective, objective_components
+        return srb_state, motor_torque
