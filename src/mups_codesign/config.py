@@ -14,7 +14,7 @@ class CodesignConfig:
     dtype: str = torch.float32
 
     # Design space config
-    active_dim: int = 2  # Number of active design parameters
+    active_param_names: tuple = ("ups_ks", "ups_l0")  # Names of active design parameters
 
     # MUPS spring config
     softplus_beta: float = 1.0
