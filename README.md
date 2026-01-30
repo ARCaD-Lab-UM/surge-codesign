@@ -1,0 +1,42 @@
+# Differential CoDesign
+
+Differentiable co-design pipeline for the MUPS hopping robot.
+
+## Installation
+
+This repo assumes Isaac Gym and legged_gym are pre-installed. Install this package locally:
+```bash
+pip install -e .
+```
+
+## Quick start
+
+Run unit tests:
+
+```bash
+pytest -v
+```
+
+Run design optimization:
+
+```bash
+python scripts/run_codesign.py --task hopper --headless --load_run rainbow_v1
+```
+
+Plot optimization trajectory over design landscape:
+```bash
+python scripts/plot_landscape.py --task hopper --headless --load_run rainbow_v1
+```
+
+### Prioritized TODOs:
+
+- [x] Fix hardcoded design_param_names in mups_robot.py
+- [x] Unify changeable parameters with design space parameters
+- [x] Fix broken tests and make them unit-testable
+- [x] Fix energy calculation to account for time step correctly
+- [x] Wrap control loop into a rollout function
+- [x] Unify control loop helper for run_codesign and plot_landscape
+- [x] Run a test with 4 dim design space with unchanged policy to see if pipeline works
+- [ ] Implement logger to save important statistics during optimization
+- [ ] Implement visualization of design evolution over iterations
+- [ ] Do I need an Optimizer class or just functions?
