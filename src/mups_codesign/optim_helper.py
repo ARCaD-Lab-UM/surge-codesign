@@ -2,6 +2,7 @@
 Optimization helper for control loop and design iterations
 """
 
+import pdb
 import time
 from collections import defaultdict
 
@@ -22,6 +23,8 @@ def rollout_control_loop(
     objective_calculator: DesignObjective,
     num_steps: int,
     headless: bool,
+    modify_priv_obs: bool=True,
+    draw_debug_vis: bool=False,
 ):
     total_design_objective = torch.zeros(env.num_envs, device=env.device)
     objective_term_sums = defaultdict(float)
@@ -42,13 +45,11 @@ def rollout_control_loop(
         # Step control policy with design in privileged observation
         #* Use the normalized design parameters as the privi_obs has to be clipped
         # TODO: double check this part
-        modified_privileged_obs = torch.cat(
-            (
-                privileged_obs[:, :-2],
-                param_values_normalized.unsqueeze(0).expand(env.num_envs, -1),
-            ),
-            dim=-1,
-        )
+        modified_privileged_obs = privileged_obs.clone()
+        if modify_priv_obs:
+            num_params = param_values_normalized.shape[-1]
+            modified_privileged_obs[:, -num_params:] = param_values_normalized.unsqueeze(0).expand(env.num_envs, -1)
+
         actions = control_policy(obs, modified_privileged_obs, estimated_obs, scan_obs, adaptation_mode=False)
 
         # Step isaacgym dynamics
@@ -78,6 +79,10 @@ def rollout_control_loop(
         # Update logging
         for name, value in objective_terms.items():
             objective_term_sums[name] += value.mean().item()
+
+        # Draw debug visualization
+        if draw_debug_vis:
+            env.draw_debug_vis_srb(srb_state)
 
         # Handle real time rendering
         if not headless:

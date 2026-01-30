@@ -17,6 +17,7 @@ from mups_codesign.mups_robot import MupsRobot
 from mups_codesign.config import CodesignConfig
 from mups_codesign.design_space import DesignSpace
 from mups_codesign.design_objective import DesignObjective
+from mups_codesign.optim_helper import rollout_control_loop
 from mups_codesign.isaac_env.hopper_standalone import HopperStandalone
 from mups_codesign.isaac_env.hopper_standalone_config import HopperStandaloneCfg, HopperStandaloneCfgPPO
 
@@ -53,27 +54,23 @@ if __name__ == '__main__':
     env_cfg.commands.ranges.lin_vel_x = [0.0, 0.0]
     env_cfg.commands.ranges.lin_vel_y = [0.0, 0.0]
 
-    # Make environment
+    # Make isaacgym environment
     env, _ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
-
-    # Initialize design parameterized robot model
-    design_config = CodesignConfig(num_envs=env.num_envs, device=env.device, dtype=torch.float32)
-    design_objective_calculator = DesignObjective(design_config)
-    srb_env = MupsRobot(design_config)
 
     # Load control policy in inference mode
     train_cfg.runner.resume = True
     ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args, train_cfg=train_cfg)
     control_policy = ppo_runner.get_inference_policy(device=env.device)
 
+    #* Initialize codesign modules
+    design_config = CodesignConfig(num_envs=env.num_envs, device=env.device, dtype=torch.float32)
+    srb_env = MupsRobot(design_config)
+    design_objective_calculator = DesignObjective(design_config)
+    design_space = DesignSpace(design_config, init_param_values=None, requires_grad=False)
 
     # Generate a design landscape grid
     num_grid = np.sqrt(env.num_envs).astype(int)
     assert num_grid**2 == env.num_envs, "For grid design, num_envs should be a perfect square"
-
-
-    # TODO: refactor this
-    design_space = DesignSpace(design_config)
 
     design_param_range = design_space.active_param_bounds.cpu().numpy()  # (2, 2)
 
@@ -122,55 +119,20 @@ if __name__ == '__main__':
     # Initialize state buffers
     with torch.no_grad():
         env.reset()
-        obs = env.get_observations()
-        privileged_obs = env.get_privileged_observations()
-        critic_obs = env.get_critic_observations()
-        estimated_obs = env.get_estimated_observations()
-        scan_obs = env.get_scan_observations()
-        isaac_state = env.root_states.clone()
-        dof_state = torch.hstack([env.dof_pos, env.dof_vel]).clone()
 
-    # Task iterations
-    for control_iter in range(N_CONTROL_ITER):
-        time_start = time.time()
-
-        with torch.no_grad():
-            # Step control policy
-            actions = control_policy(obs, privileged_obs, estimated_obs, scan_obs, adaptation_mode=False)
-
-            # Step SRB dynamics
-            srb_state, motor_torque = srb_env.step_srb_dynamics(
-                isaac_state.clone(),
-                dof_state.clone(),
-                actions
-            )
-
-            design_objective, objective_terms = design_objective_calculator.calc_objective(
-                srb_state,
-                dof_state,
-                motor_torque
-            )
-
-            # Step isaacgym dynamics
-            obs, privileged_obs, critic_obs, estimated_obs, scan_obs, rews, dones, infos = env.step(actions)
-            isaac_state = env.root_states.clone()
-            dof_state = torch.hstack([env.dof_pos, env.dof_vel]).clone()
-
-            # Update debug visualization
-            env.draw_debug_vis_srb(srb_state)
-
-
-        # Accumulate design objective
-        # design_objective = robot.calc_design_objective(srb_state, dof_state, env.torques, design_param_grid.T)
-        total_design_objective = total_design_objective + design_objective
-
-        # Handle real time rendering
-        if not args.headless:
-            # Block rendering to wall clock
-            time_elapsed = time.time() - time_start
-            time_until_next_step = env.dt - time_elapsed
-            if time_until_next_step > 0:
-                time.sleep(time_until_next_step)
+    # Rollout control to evaluate design objective
+    with torch.no_grad():
+        total_design_objective, _ = rollout_control_loop(
+            env,
+            control_policy,
+            srb_env,
+            None,
+            design_objective_calculator,
+            N_CONTROL_ITER,
+            headless=args.headless,
+            modify_priv_obs=False,
+            draw_debug_vis=True
+        )
 
     design_objective_grid = total_design_objective.reshape(num_grid, num_grid).cpu().numpy()
 

@@ -92,7 +92,7 @@ if __name__ == '__main__':
     design_objective_calculator = DesignObjective(design_config)
     design_space = DesignSpace(design_config, initial_design_params)
 
-    design_params_normalized = design_space.active_normalized_param_values #* this is the root of computation graph, no need to rebuild
+    design_params_normalized = design_space.active_normalized_param_values #* this is the leaf of computation graph, no need to rebuild
 
     # First-order optimizer
     optimizer = optim.Adam([design_params_normalized], lr=LEARN_RATE)
@@ -106,7 +106,7 @@ if __name__ == '__main__':
 
         # Retrieve design variables in shape (num_params,)
         param_names = design_space.active_param_names
-        param_values = design_space.active_param_values #* this is not the root of computation graph, so it has to be rebuilt every iteration
+        param_values = design_space.active_param_values #* this is not the leaf of computation graph, so it has to be rebuilt every iteration
         param_values_detached = design_space.detached_active_param_values
 
         # Set design parameters for each environment
