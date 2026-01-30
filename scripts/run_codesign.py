@@ -92,7 +92,7 @@ if __name__ == '__main__':
     design_objective_calculator = DesignObjective(design_config)
     design_space = DesignSpace(design_config, initial_design_params)
 
-    design_params_normalized = design_space.active_normalized_param_values  # nn.Parameter of shape (num_params, )
+    design_params_normalized = design_space.active_normalized_param_values #* this is the root of computation graph, no need to rebuild
 
     # First-order optimizer
     optimizer = optim.Adam([design_params_normalized], lr=LEARN_RATE)
@@ -104,11 +104,22 @@ if __name__ == '__main__':
     for design_iter in tqdm(range(N_DESIGN_ITER), desc="Design Iteration", ncols=80, file=sys.stdout):
         print("") # Flush a newline after tqdm progress bar
 
+        # Retrieve design variables in shape (num_params,)
+        param_names = design_space.active_param_names
+        param_values = design_space.active_param_values #* this is not the root of computation graph, so it has to be rebuilt every iteration
+        param_values_detached = design_space.detached_active_param_values
+
+        # Set design parameters for each environment
+        env.set_design_params(param_values_detached[None, :]) # (num_envs, num_params)
+        srb_env.set_design_params(param_names, param_values[None, :]) # keep grad
+        with torch.no_grad():
+            env.reset()
+
         total_design_objective, objective_term_sums = rollout_control_loop(
             env,
             control_policy,
             srb_env,
-            design_space,
+            design_params_normalized,
             design_objective_calculator,
             N_CONTROL_ITER,
             headless=args.headless
