@@ -77,6 +77,7 @@ if __name__ == '__main__':
     ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args, train_cfg=train_cfg)
     control_policy = ppo_runner.get_inference_policy(device=env.device)
 
+    # TODO: handle these setting in a centralized way, including initial_design_params
     # Codesign parameters
     N_DESIGN_ITER = 50
     N_CONTROL_ITER = 100

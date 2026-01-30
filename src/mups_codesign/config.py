@@ -10,12 +10,12 @@ import torch
 @dataclass
 class CodesignConfig:
     # General config
-    num_envs: int = 1024
+    num_envs: int = 1024 # TODO: this is overwritten by isaacgym env config
     device: str = "cuda:0"
     dtype: str = torch.float32
 
     # Design space config
-    active_param_names: tuple = ("ups_ks", "ups_l0")  # Names of active design parameters
+    active_param_names: tuple = ("ups_ks", "ups_l0")
 
     # MUPS spring config
     softplus_beta: float = 1.0

@@ -44,10 +44,10 @@ def rollout_control_loop(
 
         # Step control policy with design in privileged observation
         #* Use the normalized design parameters as the privi_obs has to be clipped
-        # TODO: double check this part
         modified_privileged_obs = privileged_obs.clone()
         if modify_priv_obs:
             num_params = param_values_normalized.shape[-1]
+            # TODO: how to handle different selection of active design params?
             modified_privileged_obs[:, -num_params:] = param_values_normalized.unsqueeze(0).expand(env.num_envs, -1)
 
         actions = control_policy(obs, modified_privileged_obs, estimated_obs, scan_obs, adaptation_mode=False)
