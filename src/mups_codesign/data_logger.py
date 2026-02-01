@@ -88,12 +88,10 @@ class DataLogger:
         self.metrics_path = os.path.join(self.run_dir, "metrics.jsonl")
         self.control_metrics_path = os.path.join(self.run_dir, "control_metrics.jsonl")
         self.metadata_path = os.path.join(self.run_dir, "metadata.json")
-        self._metrics_fp = open(self.metrics_path, "a", encoding="utf-8")
-        self._control_fp = None
 
-        # TensorBoard writer
-        tb_dir = os.path.join(self.run_dir, "tensorboard")
-        self._tb_writer = SummaryWriter(tb_dir)
+        self._metrics_fp = None
+        self._control_fp = None
+        self._tb_writer = None
 
         self._param_names = None
 
@@ -115,14 +113,14 @@ class DataLogger:
         self,
         iteration: int,
         objective_total: float,
-        objective_terms: Optional[Dict[str, Any]],
-        params_value: Optional[Any],
-        params_normalized: Optional[Any],
-        grad_terms: Optional[Any],
-        grad_norm: Optional[float],
-        best_loss: Optional[float],
-        best_params: Optional[Any],
-        extra: Optional[Dict[str, Any]],
+        objective_terms: Dict[str, Any],
+        params_value: Any,
+        params_normalized: Any,
+        grad_terms: Any,
+        grad_norm: float,
+        best_loss: float,
+        best_params: Any,
+        extra: Dict[str, Any],
     ) -> None:
         record: Dict[str, Any] = {
             "iteration": int(iteration),
@@ -142,24 +140,21 @@ class DataLogger:
         self._add_param_block(record, "param/value", params_value)
         self._add_param_block(record, "param/normalized", params_normalized)
 
-        if extra:
-            for key, value in extra.items():
-                record[f"extra/{key}"] = _to_serializable(value)
+        for key, value in extra.items():
+            record[f"extra/{key}"] = _to_serializable(value)
 
-        self._write_record(record, stream="iteration")
-        self._log_tensorboard(record, step=iteration)
+        self._write_jsonl(record, stream="iteration")
+        self._write_tensorboard(record, step=iteration)
 
-    def log_control_step(self, design_iter: int, control_iter: int, scalars: Dict[str, Any]) -> None:
+    def log_control_step(self, control_iter: int, scalars: Dict[str, Any]) -> None:
         record = {
-            "design_iteration": int(design_iter),
             "control_iteration": int(control_iter),
             "wall_time": time.time(),
         }
         for key, value in scalars.items():
             record[f"control/{key}"] = _to_serializable(value)
 
-        self._write_record(record, stream="control")
-        self._log_tensorboard(record, step=control_iter)
+        self._write_jsonl(record, stream="control")
 
     def close(self) -> None:
         if self._metrics_fp:
@@ -175,10 +170,7 @@ class DataLogger:
             self._tb_writer.close()
             self._tb_writer = None
 
-    def _add_param_block(self, record: Dict[str, Any], prefix: str, values: Optional[Any]) -> None:
-        if values is None:
-            return
-
+    def _add_param_block(self, record: Dict[str, Any], prefix: str, values: Any) -> None:
         values = _to_numpy(values)
         if isinstance(values, np.ndarray):
             record[f"{prefix}/vector"] = values.tolist()
@@ -190,15 +182,28 @@ class DataLogger:
         for name, value in zip(self._param_names, values):
             record[f"{prefix}/{name}"] = _to_serializable(value)
 
+    def _get_metrics_fp(self):
+        if self._metrics_fp is None:
+            self._metrics_fp = open(self.metrics_path, "a", encoding="utf-8")
+
+        return self._metrics_fp
+
     def _get_control_fp(self):
         if self._control_fp is None:
             self._control_fp = open(self.control_metrics_path, "a", encoding="utf-8")
 
         return self._control_fp
+    
+    def _get_tb_writer(self):
+        if self._tb_writer is None:
+            tb_dir = os.path.join(self.run_dir, "tensorboard")
+            self._tb_writer = SummaryWriter(tb_dir)
 
-    def _write_record(self, record: Dict[str, Any], stream: str) -> None:
+        return self._tb_writer
+
+    def _write_jsonl(self, record: Dict[str, Any], stream: str) -> None:
         if stream == "iteration":
-            fp = self._metrics_fp
+            fp = self._get_metrics_fp()
         elif stream == "control":
             fp = self._get_control_fp()
         else:
@@ -208,15 +213,14 @@ class DataLogger:
         fp.write("\n")
         fp.flush()
 
-    def _log_tensorboard(self, record: Dict[str, Any], step: int) -> None:
-        if not self._tb_writer:
-            return
+    def _write_tensorboard(self, record: Dict[str, Any], step: int) -> None:
+        writer = self._get_tb_writer()
 
         for key, value in record.items():
             if key in ("iteration", "wall_time", "design_iteration", "control_iteration"):
                 continue
 
             if _is_scalar(value):
-                self._tb_writer.add_scalar(key, float(value), global_step=step)
+                writer.add_scalar(key, float(value), global_step=step)
 
-        self._tb_writer.flush()
+        writer.flush()
