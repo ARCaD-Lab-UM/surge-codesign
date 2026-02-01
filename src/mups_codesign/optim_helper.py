@@ -47,9 +47,9 @@ def rollout_control_loop(
         #* Use the normalized design parameters as the privi_obs has to be clipped
         modified_privileged_obs = privileged_obs.clone()
         if modify_priv_obs:
-            num_params = param_values_normalized.shape[-1]
-            # TODO: how to handle different selection of active design params?
-            modified_privileged_obs[:, -num_params:] = param_values_normalized.unsqueeze(0).expand(env.num_envs, -1)
+            # TODO: after the full policy is trained, we should always pass a full set of design params
+            # TODO: and handle it outside this function
+            modified_privileged_obs[:, -2:] = param_values_normalized[:2].unsqueeze(0).expand(env.num_envs, -1)
 
         actions = control_policy(obs, modified_privileged_obs, estimated_obs, scan_obs, adaptation_mode=False)
 

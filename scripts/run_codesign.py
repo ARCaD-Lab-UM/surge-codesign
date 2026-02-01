@@ -82,9 +82,9 @@ if __name__ == '__main__':
     N_DESIGN_ITER = 50
     N_CONTROL_ITER = 100
     LEARN_RATE = 5e-2
-    print(f"Design Iterations: {N_DESIGN_ITER}, Control Iterations: {N_CONTROL_ITER}")
+    initial_design_params = None # torch.tensor([3000, 0.1], device=env.device)
 
-    initial_design_params = torch.tensor([3000, 0.1], device=env.device)
+    print(f"Design Iterations: {N_DESIGN_ITER}, Control Iterations: {N_CONTROL_ITER}")
     print(f"Initial Design Parameters: {initial_design_params}")
 
     #* Initialize codesign modules
@@ -107,7 +107,6 @@ if __name__ == '__main__':
         "n_design_iter": N_DESIGN_ITER,
         "n_control_iter": N_CONTROL_ITER,
         "learn_rate": LEARN_RATE,
-        "initial_design_params": initial_design_params.detach().cpu().numpy().tolist(),
     })
     best_loss = float("inf")
     best_params = None

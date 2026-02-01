@@ -45,6 +45,8 @@ python scripts/plot_landscape.py --task hopper --policy_id rainbow_v1
 - [x] Implement logger to save important statistics during optimization
 - [x] Revamp plot_landscape script to dump one landscape per policy
 - [x] Check if landscape match with previous runs
-- [ ] Retry hacked 4 dim optimization and check tensorboard to see if those make sense
+- [x] Retry hacked 4 dim optimization and check tensorboard to see if those make sense
 - [ ] No need for hopper standalone env and config, instead, use the actual hopper env and config
 - [ ] Retrain policy with 4 dim design space, tune design range if necessary
+- [ ] How to run with different seeds?
+- [ ] Start interfacing with CMA-ES
