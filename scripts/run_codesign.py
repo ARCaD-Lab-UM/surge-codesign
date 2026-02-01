@@ -99,7 +99,7 @@ if __name__ == '__main__':
     optimizer = optim.Adam([design_params_normalized], lr=LEARN_RATE)
 
     run_name = f"{args.task}_codesign"
-    logger = DataLogger(root_dir=design_config.log_dir, run_name=run_name, enable_tensorboard=True)
+    logger = DataLogger(root_dir=design_config.log_dir, run_name=run_name)
     logger.log_metadata({
         "args": vars(args),
         "design_config": asdict(design_config),

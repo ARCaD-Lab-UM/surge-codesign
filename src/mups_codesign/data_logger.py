@@ -70,6 +70,7 @@ def load_jsonl(path: str) -> list:
 
 def load_run(run_dir: str, stream: str = "iteration") -> list:
     filename = "metrics.jsonl" if stream == "iteration" else "control_metrics.jsonl"
+
     return load_jsonl(os.path.join(run_dir, filename))
 
 
@@ -77,8 +78,7 @@ class DataLogger:
     def __init__(
         self,
         root_dir: str,
-        run_name: str = "codesign",
-        enable_tensorboard: bool = True,
+        run_name: str = "codesign"
     ) -> None:
         timestamp = time.strftime("%Y%m%d_%H%M%S")
         self.run_id = timestamp
@@ -91,10 +91,9 @@ class DataLogger:
         self._metrics_fp = open(self.metrics_path, "a", encoding="utf-8")
         self._control_fp = None
 
-        self._tb_writer = None
-        if enable_tensorboard:
-            tb_dir = os.path.join(self.run_dir, "tensorboard")
-            self._tb_writer = SummaryWriter(tb_dir)
+        # TensorBoard writer
+        tb_dir = os.path.join(self.run_dir, "tensorboard")
+        self._tb_writer = SummaryWriter(tb_dir)
 
         self._param_names = None
 
