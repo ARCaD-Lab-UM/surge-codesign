@@ -9,8 +9,8 @@ from collections import defaultdict
 import torch
 from torch import nn
 
+from mups_codesign.data_logger import DataLogger
 from mups_codesign.design_objective import DesignObjective
-from mups_codesign.design_space import DesignSpace
 from mups_codesign.isaac_env.hopper_standalone import HopperStandalone
 from mups_codesign.mups_robot import MupsRobot
 
@@ -25,6 +25,7 @@ def rollout_control_loop(
     headless: bool,
     modify_priv_obs: bool=True,
     draw_debug_vis: bool=False,
+    logger: DataLogger = None,
 ):
     total_design_objective = torch.zeros(env.num_envs, device=env.device)
     objective_term_sums = defaultdict(float)
@@ -69,6 +70,14 @@ def rollout_control_loop(
             dof_state,      # non-diff
             motor_torque    # diff
         )
+        if logger is not None:
+            logger.log_control_step(num_steps, 
+                {
+                    "srb_state": srb_state,
+                    "dof_state": dof_state,
+                    "motor_torque": motor_torque,
+                }
+            )
 
         #* No need for state alignment
         # next_state = isaac_state + 0.9 * (srb_state - srb_state.detach())
