@@ -38,4 +38,6 @@ python scripts/plot_landscape.py --task hopper --headless --load_run rainbow_v1
 - [x] Unify control loop helper for run_codesign and plot_landscape
 - [x] Run a test with 4 dim design space with unchanged policy to see if pipeline works
 - [x] Implement logger to save important statistics during optimization
-- [] Revamp visualization script
+- [ ] Revamp plot_landscape script and see if results match with previous runs
+- [ ] Retry hacked 4 dim optimization and check tensorboard to see if those make sense
+- [ ] Retrain policy with 4 dim design space, tune design range if necessary
