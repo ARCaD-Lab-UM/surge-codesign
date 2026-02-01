@@ -37,6 +37,5 @@ python scripts/plot_landscape.py --task hopper --headless --load_run rainbow_v1
 - [x] Wrap control loop into a rollout function
 - [x] Unify control loop helper for run_codesign and plot_landscape
 - [x] Run a test with 4 dim design space with unchanged policy to see if pipeline works
-- [ ] Implement logger to save important statistics during optimization
-- [ ] Implement visualization of design evolution over iterations
-- [ ] Do I need an Optimizer class or just functions?
+- [x] Implement logger to save important statistics during optimization
+- [] Revamp visualization script

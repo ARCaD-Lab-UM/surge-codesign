@@ -4,11 +4,10 @@ Thin CLI that selects optimizer and calls optim.py. All isaacgym imports and log
 
 import isaacgym
 
-import os
 import pdb
 import sys
 import time
-from collections import defaultdict
+from dataclasses import asdict
 import numpy as np
 from tqdm import tqdm
 
@@ -22,6 +21,7 @@ from legged_gym.utils import get_args, task_registry
 
 from mups_codesign.mups_robot import MupsRobot
 from mups_codesign.config import CodesignConfig
+from mups_codesign.data_logger import DataLogger
 from mups_codesign.design_space import DesignSpace
 from mups_codesign.design_objective import DesignObjective
 from mups_codesign.optim_helper import rollout_control_loop
@@ -98,17 +98,31 @@ if __name__ == '__main__':
     # First-order optimizer
     optimizer = optim.Adam([design_params_normalized], lr=LEARN_RATE)
 
-    f_best_log = []
-    x_best_log = [initial_design_params.cpu().numpy()]
+    run_name = f"{args.task}_codesign"
+    logger = DataLogger(root_dir=design_config.log_dir, run_name=run_name, enable_tensorboard=True)
+    logger.log_metadata({
+        "args": vars(args),
+        "design_config": asdict(design_config),
+        "param_names": list(design_space.active_param_names),
+        "n_design_iter": N_DESIGN_ITER,
+        "n_control_iter": N_CONTROL_ITER,
+        "learn_rate": LEARN_RATE,
+        "initial_design_params": initial_design_params.detach().cpu().numpy().tolist(),
+    })
+    best_loss = float("inf")
+    best_params = None
 
     # Design iterations
     for design_iter in tqdm(range(N_DESIGN_ITER), desc="Design Iteration", ncols=80, file=sys.stdout):
         print("") # Flush a newline after tqdm progress bar
+        iter_start = time.time()
 
         # Retrieve design variables in shape (num_params,)
         param_names = design_space.active_param_names
         param_values = design_space.active_param_values #* this is not the leaf of computation graph, so it has to be rebuilt every iteration
         param_values_detached = design_space.detached_active_param_values
+        params_eval = param_values_detached.cpu().numpy()
+        params_normalized_eval = design_params_normalized.detach().cpu().numpy()
 
         # Set design parameters for each environment
         env.set_design_params(param_values_detached[None, :]) # (num_envs, num_params)
@@ -131,7 +145,11 @@ if __name__ == '__main__':
         loss = total_design_objective.mean()
         loss.backward()
 
-        # Clip gradient
+        # Record and clip gradients
+        grad_values = None
+        if design_params_normalized.grad is not None:
+            grad_values = design_params_normalized.grad.detach().cpu().numpy()
+
         grad_norm_before_clipping = nn.utils.clip_grad_norm_(design_params_normalized, max_norm=1.0)
         print(f"Grad before clipping: {grad_norm_before_clipping:.4f}")
 
@@ -143,23 +161,35 @@ if __name__ == '__main__':
         # Update optmization logs
         f_best = loss.item()
         x_best = design_space.active_param_values.detach().cpu().numpy()
-        f_best_log.append(f_best)
-        x_best_log.append(x_best)
+        if f_best < best_loss:
+            best_loss = f_best
+            best_params = params_eval.copy()
 
         # Print design iteration summary
         print(f"Design Iteration {design_iter + 1}/{N_DESIGN_ITER}, Iteration loss: {f_best:.4f}")
         print(f"New Design Parameters: {x_best}")
-        if objective_term_sums:
-            averaged_terms = {name: value / N_CONTROL_ITER for name, value in objective_term_sums.items()}
-            term_summary = ", ".join(f"{name}: {val:.4f}" for name, val in averaged_terms.items())
-            print(f"Mean objective components -> {term_summary}")
+        term_summary = ", ".join(f"{name}: {val:.4f}" for name, val in objective_term_sums.items())
+        print(f"Mean objective components -> {term_summary}")
+
+        iter_time_s = time.time() - iter_start
+        logger.log_iteration(
+            iteration=design_iter,
+            objective_total=f_best,
+            objective_terms=objective_term_sums,
+            params_value=params_eval,
+            params_normalized=params_normalized_eval,
+            grad_norm=float(grad_norm_before_clipping),
+            grad_terms=grad_values,
+            best_loss=best_loss,
+            best_params=best_params,
+            extra={
+                "lr": optimizer.param_groups[0]["lr"], 
+                "iter_time_s": iter_time_s
+                },
+        )
 
     print("Design Optimization Completed.")
 
-    # Save intermediate design parameters and objective logs to file
-    log_file = f"{design_config.log_dir}design_optimization_logs_{time.strftime('%Y%m%d_%H%M%S')}.npz"
-    np.savez(log_file, 
-             f_best_log=np.array(f_best_log), 
-             x_best_log=np.array(x_best_log))
-    print(f"Optimization logs saved to: {log_file}")
-    
+    # Close logger
+    logger.close()
+    print(f"Logs saved to {logger.run_dir}")
