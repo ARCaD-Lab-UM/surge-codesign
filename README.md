@@ -23,9 +23,14 @@ Run design optimization:
 python scripts/run_codesign.py --task hopper --headless --load_run rainbow_v1
 ```
 
+Collect design landscape for a policy:
+```bash
+python scripts/collect_landscape.py --task hopper --headless --load_run rainbow_v1
+```
+
 Plot optimization trajectory over design landscape:
 ```bash
-python scripts/plot_landscape.py --task hopper --headless --load_run rainbow_v1
+python scripts/plot_landscape.py --task hopper --policy_id rainbow_v1
 ```
 
 ### Prioritized TODOs:
@@ -38,6 +43,8 @@ python scripts/plot_landscape.py --task hopper --headless --load_run rainbow_v1
 - [x] Unify control loop helper for run_codesign and plot_landscape
 - [x] Run a test with 4 dim design space with unchanged policy to see if pipeline works
 - [x] Implement logger to save important statistics during optimization
-- [ ] Revamp plot_landscape script and see if results match with previous runs
+- [x] Revamp plot_landscape script to dump one landscape per policy
+- [x] Check if landscape match with previous runs
 - [ ] Retry hacked 4 dim optimization and check tensorboard to see if those make sense
+- [ ] No need for hopper standalone env and config, instead, use the actual hopper env and config
 - [ ] Retrain policy with 4 dim design space, tune design range if necessary

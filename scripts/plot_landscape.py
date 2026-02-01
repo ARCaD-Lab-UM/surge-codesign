@@ -1,187 +1,152 @@
-import isaacgym
-
-import os
-import pdb
 import glob
-import time
-import torch
+import os
+import argparse
+
 import numpy as np
-import matplotlib.pyplot as plt
+
+from mups_codesign.data_logger import load_run
+from mups_codesign.vis_helper import plot_contour, plot_surface
 
 
-from legged_gym import LEGGED_GYM_ROOT_DIR
-from legged_gym.envs import *
-from legged_gym.utils import get_args, task_registry
-
-from mups_codesign.mups_robot import MupsRobot
-from mups_codesign.config import CodesignConfig
-from mups_codesign.design_space import DesignSpace
-from mups_codesign.design_objective import DesignObjective
-from mups_codesign.optim_helper import rollout_control_loop
-from mups_codesign.isaac_env.hopper_standalone import HopperStandalone
-from mups_codesign.isaac_env.hopper_standalone_config import HopperStandaloneCfg, HopperStandaloneCfgPPO
-
-# Set print precision
-np.set_printoptions(precision=6, suppress=True)
-torch.set_printoptions(precision=6, sci_mode=False)
+def _find_latest_landscape(landscape_dir, task, policy_tag):
+    pattern = os.path.join(landscape_dir, f"{task}_{policy_tag}_landscape_*.npz")
+    files = glob.glob(pattern)
+    if not files:
+        return None
+    return max(files, key=os.path.getctime)
 
 
-if __name__ == '__main__':
-    # Parse arguments
-    args = get_args()
+def _load_landscape(path):
+    data = np.load(path, allow_pickle=True)
+    param1_grid = data["param1_grid"]
+    param2_grid = data["param2_grid"]
+    objective_grid = data["objective_grid"]
+    param_names = None
+    if "param_names" in data:
+        param_names = [str(name) for name in data["param_names"].tolist()]
+    grid_param_names = None
+    if "grid_param_names" in data:
+        grid_param_names = [str(name) for name in data["grid_param_names"].tolist()]
+    policy_id = None
+    if "policy_id" in data:
+        policy_id = data["policy_id"]
 
-    task_registry.register(
-        "hopper",
-        HopperStandalone,
-        HopperStandaloneCfg(),
-        HopperStandaloneCfgPPO()
+    if not param_names:
+        param_names = ["param_0", "param_1"]
+    if not grid_param_names:
+        grid_param_names = param_names[:2]
+
+    return {
+        "param1_grid": param1_grid,
+        "param2_grid": param2_grid,
+        "objective_grid": objective_grid,
+        "param_names": param_names,
+        "grid_param_names": grid_param_names,
+        "policy_id": policy_id,
+    }
+
+
+def _find_latest_run_dir(log_root, run_prefix):
+    candidates = []
+    for path in glob.glob(os.path.join(log_root, f"{run_prefix}_*")):
+        if os.path.isdir(path):
+            candidates.append(path)
+    if not candidates:
+        return None
+    return max(candidates, key=os.path.getctime)
+
+
+def _load_optimization_trajectory(log_root, task, param_names):
+    run_prefix = f"{task}_codesign"
+    run_dir = _find_latest_run_dir(log_root, run_prefix)
+    if not run_dir:
+        return None, None
+    records = load_run(run_dir, stream="iteration")
+    trajectory = []
+    for record in records:
+        if "param/value/vector" in record:
+            values = record["param/value/vector"]
+        else:
+            values = [record.get(f"param/value/{name}") for name in param_names]
+        if values is None:
+            continue
+        if any(v is None for v in values):
+            continue
+        trajectory.append(values)
+    if not trajectory:
+        return None, run_dir
+    return np.asarray(trajectory, dtype=float), run_dir
+
+
+def _parse_args():
+    parser = argparse.ArgumentParser(description="Plot design landscape from saved NPZ.")
+    parser.add_argument("--task", type=str, default="hopper", help="Task name used in landscape filenames.")
+    parser.add_argument("--policy_id", type=str, help="Policy identifier to match landscape files.")
+    parser.add_argument("--log_root", type=str, default="logs", help="Root directory for logs and landscapes.")
+    parser.add_argument("--landscape_path", type=str, default=None, help="Explicit NPZ landscape path to plot.")
+    parser.add_argument("--no_overlay", action="store_true", help="Disable optimization trajectory overlay.")
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = _parse_args()
+
+    policy_id = args.policy_id
+
+    landscape_path = args.landscape_path
+    landscape_dir = os.path.join(args.log_root, "landscapes")
+    if landscape_path is None:
+        landscape_path = _find_latest_landscape(landscape_dir, args.task, policy_id)
+
+    if landscape_path is None:
+        raise FileNotFoundError(f"No landscape files found in {landscape_dir}")
+
+    landscape = _load_landscape(landscape_path)
+    param1_grid = landscape["param1_grid"]
+    param2_grid = landscape["param2_grid"]
+    objective_grid = landscape["objective_grid"]
+    grid_param_names = landscape["grid_param_names"]
+    landscape_policy_id = landscape["policy_id"]
+
+    trajectory = None
+    run_dir = None
+    if not args.no_overlay:
+        trajectory, run_dir = _load_optimization_trajectory(args.log_root, args.task, landscape["param_names"])
+        if trajectory is not None and trajectory.shape[1] > 2:
+            trajectory = trajectory[:, :2]
+
+    output_dir = os.path.dirname(landscape_path)
+    overlay_enabled = not args.no_overlay
+    if overlay_enabled and run_dir:
+        output_dir = run_dir
+    basename = os.path.splitext(os.path.basename(landscape_path))[0]
+    suffix = "_overlay" if overlay_enabled and run_dir else ""
+
+    contour_path = os.path.join(output_dir, f"{basename}_contour{suffix}.png")
+    plot_contour(
+        param1_grid,
+        param2_grid,
+        objective_grid,
+        grid_param_names,
+        trajectory=trajectory,
+        save_path=contour_path,
+        show=True,
     )
+    print(f"Saved contour plot to: {contour_path}")
 
-    env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
+    surface_path = os.path.join(output_dir, f"{basename}_surface{suffix}.png")
+    plot_surface(
+        param1_grid,
+        param2_grid,
+        objective_grid,
+        grid_param_names,
+        trajectory=trajectory,
+        save_path=surface_path,
+        show=False,
+    )
+    print(f"Saved surface plot to: {surface_path}")
 
-    # Override some parameters for testing
-    env_cfg.env.num_envs = 4096
-    env_cfg.terrain.num_rows = 1
-    env_cfg.terrain.num_cols = 1
-    env_cfg.terrain.curriculum = False
-    env_cfg.noise.add_noise = False
-    env_cfg.domain_rand.randomize_friction = False
-    env_cfg.domain_rand.randomize_base_mass = False
-    env_cfg.domain_rand.randomize_center_of_mass = False
-    env_cfg.domain_rand.randomize_motor_strength = False
-    env_cfg.domain_rand.push_robots = False
-    env_cfg.commands.zero_command = False
-    env_cfg.commands.ranges.lin_vel_x = [0.0, 0.0]
-    env_cfg.commands.ranges.lin_vel_y = [0.0, 0.0]
-
-    # Make isaacgym environment
-    env, _ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
-
-    # Load control policy in inference mode
-    train_cfg.runner.resume = True
-    ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args, train_cfg=train_cfg)
-    control_policy = ppo_runner.get_inference_policy(device=env.device)
-
-    #* Initialize codesign modules
-    design_config = CodesignConfig(num_envs=env.num_envs, device=env.device, dtype=torch.float32)
-    srb_env = MupsRobot(design_config)
-    design_objective_calculator = DesignObjective(design_config)
-    design_space = DesignSpace(design_config, init_param_values=None, requires_grad=False)
-
-    # Generate a design landscape grid
-    num_grid = np.sqrt(env.num_envs).astype(int)
-    assert num_grid**2 == env.num_envs, "For grid design, num_envs should be a perfect square"
-
-    design_param_range = design_space.active_param_bounds.cpu().numpy()  # (2, 2)
-
-    param1_span = torch.linspace(
-        design_param_range[0, 0], 
-        design_param_range[0, 1], 
-        num_grid,
-        device=env.device)
-    
-    param2_span = torch.linspace(
-        design_param_range[1, 0], 
-        design_param_range[1, 1], 
-        num_grid,
-        device=env.device)
-    
-    param1_grid, param2_grid = torch.meshgrid(param1_span, param2_span, indexing='xy')
-
-    design_param_grid = torch.stack([
-        param1_grid.reshape(-1),
-        param2_grid.reshape(-1)
-    ], dim=-1)  # (num_envs, 2)
-
-    total_design_objective = torch.zeros(env.num_envs, device=env.device)
-
-    N_CONTROL_ITER = 100
-    ISO_PITCH = np.deg2rad(25)        # Pitch (up/down) angle
-    ISO_YAW   = np.deg2rad(45)        # Yaw (rotation) angle
-    ISO_DIST  = 2.0                   # metres from the robot
-
-    # Build camera direction vector
-    cam_dir_vec   = np.array([
-        -np.cos(ISO_PITCH) * np.cos(ISO_YAW),
-        -np.cos(ISO_PITCH) * np.sin(ISO_YAW),
-        np.sin(ISO_PITCH)
-    ])
-
-    # Set custom camera
-    robot_pos = env.root_states[0, :3].cpu().numpy()
-    camera_pos = robot_pos + ISO_DIST * cam_dir_vec
-    env.set_camera(camera_pos, robot_pos)
-
-    # Set design parameters to the grid
-    env.set_design_params(design_param_grid)
-    srb_env.set_design_params(design_space.active_param_names, design_param_grid) # no grad
-
-    # Initialize state buffers
-    with torch.no_grad():
-        env.reset()
-
-    # Rollout control to evaluate design objective
-    with torch.no_grad():
-        total_design_objective, _ = rollout_control_loop(
-            env,
-            control_policy,
-            srb_env,
-            None,
-            design_objective_calculator,
-            N_CONTROL_ITER,
-            headless=args.headless,
-            modify_priv_obs=False,
-            draw_debug_vis=True
-        )
-
-    design_objective_grid = total_design_objective.reshape(num_grid, num_grid).cpu().numpy()
-
-    # Plot design landscape
-    plt.figure(figsize=(8, 6))
-    plt.contourf(param1_grid.cpu().numpy(),
-                 param2_grid.cpu().numpy(),
-                 design_objective_grid,
-                 levels=20,
-                 cmap='jet')
-    plt.colorbar(label='Design Objective)')
-    plt.xlabel('Spring Stiffness Ks')
-    plt.ylabel('Rest Length L0')
-    plt.title("Design Landscape")
-
-    # Plot grid optimum
-    min_idx_flat = np.argmin(design_objective_grid)
-    min_idx = np.unravel_index(min_idx_flat, (num_grid, num_grid))
-    opt_param1 = param1_span[min_idx[1]].cpu().item()
-    opt_param2 = param2_span[min_idx[0]].cpu().item()
-    opt_objective = design_objective_grid[min_idx[0], min_idx[1]]
-
-    # Find the latest optimization log file
-    log_pattern = f"{design_config.log_dir}design_optimization_logs_*.npz"
-    log_files = glob.glob(log_pattern)
-    if log_files:
-        latest_log_file = max(log_files, key=os.path.getctime)
-        print(f"Loading optimization logs from: {latest_log_file}")
-        
-        # Load the optimization data
-        log_data = np.load(latest_log_file)
-        f_best_log = log_data['f_best_log']
-        x_best_log = log_data['x_best_log']
-        
-        # Plot the optimization trajectory
-        plt.scatter(x_best_log[:, 0], x_best_log[:, 1],
-                    color="black", marker="^", s=100, label='Optimization Path')
-        plt.scatter(x_best_log[0, 0], x_best_log[0, 1], edgecolor="black", 
-                    color='cyan', marker='s', s=100, label='Start')
-        plt.scatter(x_best_log[-1, 0], x_best_log[-1, 1], edgecolor="black",
-                    color='magenta', marker='*', s=150, label='Final Best')
-        
-        print(f"Optimization Final Best at Ks={x_best_log[-1, 0]:.4f}, L0={x_best_log[-1, 1]:.4f} with Objective={f_best_log[-1]:.4f}")
-    else:
-        print("No optimization log files found")
-
-    # Show plot
-    plt.legend()
-    plt.tight_layout()
-    if log_files:
-        plt.savefig(latest_log_file.replace(".npz", "_landscape.png"), dpi=300)
-    plt.show()
+    if run_dir:
+        print(f"Overlayed optimization trajectory from: {run_dir}")
+    elif overlay_enabled:
+        print("No optimization logs found for overlay")
