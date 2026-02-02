@@ -10,8 +10,8 @@ from legged_gym.utils import get_args, task_registry
 from mups_codesign.config import CodesignConfig
 from mups_codesign.design_objective import DesignObjective
 from mups_codesign.design_space import DesignSpace
-from mups_codesign.isaac_env.hopper_standalone import HopperStandalone
-from mups_codesign.isaac_env.hopper_standalone_config import HopperStandaloneCfg, HopperStandaloneCfgPPO
+from mups_codesign.isaac_env.hopper import HopperRobot
+from mups_codesign.isaac_env.hopper_config import HopperCfg, HopperCfgPPO
 from mups_codesign.mups_robot import MupsRobot
 from mups_codesign.optim_helper import rollout_control_loop
 from mups_codesign.vis_helper import plot_contour
@@ -40,9 +40,9 @@ if __name__ == "__main__":
 
     task_registry.register(
         "hopper",
-        HopperStandalone,
-        HopperStandaloneCfg(),
-        HopperStandaloneCfgPPO(),
+        HopperRobot,
+        HopperCfg(),
+        HopperCfgPPO(),
     )
 
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)

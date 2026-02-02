@@ -11,12 +11,12 @@ from torch import nn
 
 from mups_codesign.data_logger import DataLogger
 from mups_codesign.design_objective import DesignObjective
-from mups_codesign.isaac_env.hopper_standalone import HopperStandalone
+from mups_codesign.isaac_env.hopper import HopperRobot
 from mups_codesign.mups_robot import MupsRobot
 
 
 def rollout_control_loop(
-    env: HopperStandalone,
+    env: HopperRobot,
     control_policy: nn.Module,
     srb_env: MupsRobot,
     param_values_normalized: torch.Tensor,

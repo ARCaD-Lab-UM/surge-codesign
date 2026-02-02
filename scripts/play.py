@@ -5,8 +5,8 @@ import isaacgym
 from legged_gym.envs import *
 from legged_gym.utils import  get_args, export_policy_as_jit, Logger
 
-from mups_codesign.isaac_env.hopper_standalone import HopperStandalone # overrides arcad_gym's import
-from mups_codesign.isaac_env.hopper_standalone_config import HopperStandaloneCfg, HopperStandaloneCfgPPO # overrides arcad_gym's import
+from mups_codesign.isaac_env.hopper import HopperRobot
+from mups_codesign.isaac_env.hopper_config import HopperCfg, HopperCfgPPO
 
 import numpy as np
 import torch
@@ -15,9 +15,9 @@ import time
 def play(args):
     task_registry.register(
         "hopper",
-        HopperStandalone,
-        HopperStandaloneCfg(),
-        HopperStandaloneCfgPPO()
+        HopperRobot,
+        HopperCfg(),
+        HopperCfgPPO()
     )
 
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
