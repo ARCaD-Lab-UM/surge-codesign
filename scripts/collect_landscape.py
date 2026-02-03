@@ -7,6 +7,7 @@ import torch
 from legged_gym.envs import *
 from legged_gym.utils import get_args, task_registry
 
+from mups_codesign.data_logger import DataLogger
 from mups_codesign.config import CodesignConfig
 from mups_codesign.design_objective import DesignObjective
 from mups_codesign.design_space import DesignSpace
@@ -75,6 +76,7 @@ if __name__ == "__main__":
     srb_env = MupsRobot(design_config)
     design_objective_calculator = DesignObjective(design_config)
     design_space = DesignSpace(design_config, init_param_values=None, requires_grad=False)
+    logger = DataLogger(design_config.log_dir)
 
     # Generate a design landscape grid
     num_grid = int(np.sqrt(env.num_envs))
@@ -119,7 +121,7 @@ if __name__ == "__main__":
     srb_env.set_design_params(grid_param_names, design_param_grid[:, :2])
 
     # Rollout control to evaluate design objective
-    n_control_iter = 100
+    n_control_iter = 500
     with torch.no_grad():
         env.reset()
         total_design_objective, _ = rollout_control_loop(
@@ -132,6 +134,7 @@ if __name__ == "__main__":
             headless=args.headless,
             modify_priv_obs=False,
             draw_debug_vis=False,
+            # logger=logger
         )
 
     objective_grid = total_design_objective.reshape(num_grid, num_grid).cpu().numpy()

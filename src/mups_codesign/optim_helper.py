@@ -31,7 +31,7 @@ def rollout_control_loop(
     objective_term_sums = defaultdict(float)
 
     # Task iterations
-    for _ in range(num_steps):
+    for i in range(num_steps):
         time_start = time.time()
 
         # Get observations and states
@@ -58,7 +58,7 @@ def rollout_control_loop(
             env.step(actions)
 
         # Step SRB dynamics
-        srb_state, motor_torque = srb_env.step_srb_dynamics(
+        srb_state, motor_torque, info = srb_env.step_srb_dynamics(
             isaac_state,    #! non-diff, critical fix
             dof_state,      # non-diff
             actions,        # diff
@@ -71,11 +71,13 @@ def rollout_control_loop(
             motor_torque    # diff
         )
         if logger is not None:
-            logger.log_control_step(num_steps, 
+            logger.log_control_step(
+                i, 
                 {
                     "srb_state": srb_state,
                     "dof_state": dof_state,
                     "motor_torque": motor_torque,
+                    "info": info,
                 }
             )
 

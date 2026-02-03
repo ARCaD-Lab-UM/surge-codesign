@@ -55,7 +55,7 @@ if __name__ == '__main__':
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
 
     # Override some parameters for testing
-    env_cfg.env.num_envs = 4096
+    env_cfg.env.num_envs = 1024
     env_cfg.terrain.num_rows = 4
     env_cfg.terrain.num_cols = 4
     env_cfg.terrain.curriculum = False

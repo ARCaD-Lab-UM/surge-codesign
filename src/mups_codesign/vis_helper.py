@@ -5,7 +5,7 @@ import numpy as np
 plt.rcParams["figure.dpi"] = 150
 plt.rcParams["font.family"] = "Times New Roman"
 plt.rcParams["font.size"] = 16
-plt.rcParams["lines.linewidth"] = 2
+plt.rcParams["lines.linewidth"] = 1.5
 plt.rcParams["savefig.bbox"] = "tight"
 plt.rcParams["savefig.dpi"] = 150
 

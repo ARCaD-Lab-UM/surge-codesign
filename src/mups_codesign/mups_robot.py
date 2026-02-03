@@ -150,4 +150,12 @@ class MupsRobot:
         srb_state = torch.hstack([new_pos, new_quat, new_lin_vel, new_ang_vel])
         assert srb_state.shape == root_state.shape, "SRB state shape mismatch"
 
-        return srb_state, motor_torque
+        info = {
+            "foot_pos": foot_pos,
+            "is_contact": is_contact,
+            "foot_force": foot_force,
+            "com_acc": com_acc,
+            "ang_acc": ang_acc,
+        }
+
+        return srb_state, motor_torque, info
