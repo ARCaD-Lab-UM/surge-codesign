@@ -142,7 +142,7 @@ if __name__ == "__main__":
         grid_param_names,
         trajectory=trajectory,
         save_path=surface_path,
-        show=False,
+        show=True,
     )
     print(f"Saved surface plot to: {surface_path}")
 

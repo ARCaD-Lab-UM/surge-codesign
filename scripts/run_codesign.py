@@ -55,7 +55,7 @@ if __name__ == '__main__':
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
 
     # Override some parameters for testing
-    env_cfg.env.num_envs = 1024
+    env_cfg.env.num_envs = 10
     env_cfg.terrain.num_rows = 4
     env_cfg.terrain.num_cols = 4
     env_cfg.terrain.curriculum = False
@@ -76,6 +76,8 @@ if __name__ == '__main__':
     train_cfg.runner.resume = True
     ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args, train_cfg=train_cfg)
     control_policy = ppo_runner.get_inference_policy(device=env.device)
+    for param in ppo_runner.alg.actor_critic.parameters():
+        param.requires_grad = False
 
     # TODO: handle these setting in a centralized way, including initial_design_params
     # Codesign parameters

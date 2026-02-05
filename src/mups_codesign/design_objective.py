@@ -27,8 +27,8 @@ class DesignObjective:
         # Multi-objective weights
         self.objective_weights = {
             "heating_energy": 1.0,
-            "mechanical_energy": 3.0,
-            "height_tracking_error": 10.0,
+            "mechanical_energy": 0.0,
+            "height_tracking_error": 1.0,
         }
 
     def _calc_energy_consumption(self, dof_state, motor_torque):

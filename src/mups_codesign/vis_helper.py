@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from torchviz import make_dot
 
 # Global setting for matplotlib
 plt.rcParams["figure.dpi"] = 150
@@ -92,3 +93,11 @@ def plot_surface(
     if show:
         plt.show()
     plt.close(fig)
+
+def save_ad_graph(loss, vars:dict, filename="autograd_graph"):
+    dot = make_dot(loss, params=vars)
+    dot.format = "png"
+    if "DetachBackward" in dot.source:
+        print("[WARNING] Graph contains detached tensors!")
+
+    dot.render(filename, cleanup=True)

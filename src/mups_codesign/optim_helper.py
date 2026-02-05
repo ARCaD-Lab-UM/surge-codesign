@@ -17,14 +17,13 @@ from mups_codesign.mups_robot import MupsRobot
 
 def rollout_control_loop(
     env: HopperRobot,
-    control_policy: nn.Module,
+    control_policy: nn.Sequential,
     srb_env: MupsRobot,
-    param_values_normalized: torch.Tensor,
+    param_values_normalized: nn.Parameter,
     objective_calculator: DesignObjective,
     num_steps: int,
     headless: bool,
     modify_priv_obs: bool=True,
-    draw_debug_vis: bool=False,
     logger: DataLogger = None,
 ):
     total_design_objective = torch.zeros(env.num_envs, device=env.device)
@@ -49,7 +48,7 @@ def rollout_control_loop(
         if modify_priv_obs:
             # TODO: after the full policy is trained, we should always pass a full set of design params
             # TODO: and handle it outside this function
-            modified_privileged_obs[:, -2:] = param_values_normalized[:2].unsqueeze(0).expand(env.num_envs, -1)
+            modified_privileged_obs[:, -2:] = param_values_normalized[:2].unsqueeze(0)
 
         actions = control_policy(obs, modified_privileged_obs, estimated_obs, scan_obs, adaptation_mode=False)
 
@@ -64,12 +63,6 @@ def rollout_control_loop(
             actions,        # diff
         )
 
-        # Compute design objective
-        design_objective, objective_terms = objective_calculator.calc_objective(
-            srb_state,      # diff
-            dof_state,      # non-diff
-            motor_torque    # diff
-        )
         if logger is not None:
             logger.log_control_step(
                 i, 
@@ -82,7 +75,17 @@ def rollout_control_loop(
             )
 
         #* No need for state alignment
-        # next_state = isaac_state + 0.9 * (srb_state - srb_state.detach())
+        next_state = isaac_state + 1.0 * (srb_state - srb_state.detach())
+        #* isaac_state: non-diff
+        #* srb_state:   diff but slightly different value from isaac_state
+        #* next_state:  diff and same value as isaac_state
+
+        # Compute design objective
+        design_objective, objective_terms = objective_calculator.calc_objective(
+            next_state,     # diff
+            dof_state,      # non-diff
+            motor_torque    # diff
+        )
 
         # Update design objective sum
         total_design_objective = total_design_objective + design_objective
@@ -90,10 +93,6 @@ def rollout_control_loop(
         # Update logging
         for name, value in objective_terms.items():
             objective_term_sums[name] += value.mean().item()
-
-        # Draw debug visualization
-        if draw_debug_vis:
-            env.draw_debug_vis_srb(srb_state)
 
         # Handle real time rendering
         if not headless:

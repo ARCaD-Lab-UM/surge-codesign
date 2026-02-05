@@ -49,7 +49,7 @@ python scripts/plot_landscape.py --task hopper --policy_id rainbow_v1
 - [x] No need for hopper standalone env and config, instead, use the actual hopper env and config
 - [x] We need to plot the episode trajectory of hopper
 - [x] Retrain policy with 4 dim design space, tune design range if necessary
-- [ ] Train with design parameters directly in actor input
-- [ ] How to visualize the true landscape we are moving on top of?
-- [ ] How to run with different seeds?
+- [x] Test NN as an individual block
+- [ ] Do a through review of GD and line search and behaviour around local minimum.
+- [x] What's the role of num_envs in design optimization? Only matter if any domain rand is on.
 - [ ] Start interfacing with CMA-ES
