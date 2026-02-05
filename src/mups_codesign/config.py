@@ -25,6 +25,7 @@ class CodesignConfig:
 
     # Design space config
     active_param_names: tuple = ("ups_ks", "ups_l0")
+    raw_init_param_values: tuple = None  # if None, use default param values
 
     # MUPS spring config
     softplus_beta: float = 1.0

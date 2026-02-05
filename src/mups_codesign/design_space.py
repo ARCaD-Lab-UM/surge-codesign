@@ -4,7 +4,6 @@ Single source of truth for design parameters: names, defaults, bounds, scaling, 
 
 import torch
 import torch.nn as nn
-from torch import Tensor
 
 from mups_codesign.config import CodesignConfig
 
@@ -23,7 +22,7 @@ class DesignSpace:
         0.02,   # ups_l4
     )
 
-    def __init__(self, config: CodesignConfig, init_param_values: Tensor=None, requires_grad: bool=True):
+    def __init__(self, config: CodesignConfig, requires_grad: bool=True):
 
         # Configurable parameters
         self.device = config.device
@@ -56,15 +55,20 @@ class DesignSpace:
         self.active_param_names = config.active_param_names
         self.active_param_indices = [self.param_names.index(name) for name in self.active_param_names]
 
-        if init_param_values is None:
-            init_param_values = self.default_param_values[self.active_param_indices]
+        # Parse initial design parameter values
+        init_param_values = self.default_param_values[self.active_param_indices].clone()
+        raw_init_param_values = config.raw_init_param_values # tuple or None
+        if raw_init_param_values is not None:
+            assert len(raw_init_param_values) == len(self.active_param_names), \
+                f"init_param_values shape {len(raw_init_param_values)} does not match active design dimension {len(self.active_param_names)}"
+            init_param_values = torch.tensor(
+                raw_init_param_values,
+                dtype=self.dtype,
+                device=self.device
+            )
 
-        assert init_param_values.shape == (len(self.active_param_names), ), \
-            f"init_param_values shape {init_param_values.shape} does not match active design dimension {(len(self.active_param_names), )}"
-
-        converted_init_param_values = init_param_values.to(self.device, self.dtype)
         self.active_normalized_param_values = nn.Parameter(
-            converted_init_param_values / self.active_param_scales,
+            init_param_values / self.active_param_scales,
             requires_grad=requires_grad
         )  # (len(active_param_names), )
 
