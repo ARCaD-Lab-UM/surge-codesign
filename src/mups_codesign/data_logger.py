@@ -170,6 +170,11 @@ class DataLogger:
             self._tb_writer.close()
             self._tb_writer = None
 
+        # Delete run dir if empty
+        if not os.listdir(self.run_dir):
+            os.rmdir(self.run_dir)
+            print(f"Deleted empty run directory: {self.run_dir}")
+
     def _add_param_block(self, record: Dict[str, Any], prefix: str, values: Any) -> None:
         values = _to_numpy(values)
         if isinstance(values, np.ndarray):
