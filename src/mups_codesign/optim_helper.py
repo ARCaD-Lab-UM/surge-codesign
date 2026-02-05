@@ -29,18 +29,18 @@ def rollout_control_loop(
     total_design_objective = torch.zeros(env.num_envs, device=env.device)
     objective_term_sums = defaultdict(float)
 
+    with torch.no_grad():
+        obs = env.get_observations()
+        privileged_obs = env.get_privileged_observations()
+        estimated_obs = env.get_estimated_observations()
+        scan_obs = env.get_scan_observations()
+        isaac_state = env.root_states.clone()
+        dof_state = torch.hstack([env.dof_pos, env.dof_vel]).clone()
+        next_state = env.root_states.clone()
+
     # Task iterations
     for i in range(num_steps):
         time_start = time.time()
-
-        # Get observations and states
-        with torch.no_grad():
-            obs = env.get_observations()
-            privileged_obs = env.get_privileged_observations()
-            estimated_obs = env.get_estimated_observations()
-            scan_obs = env.get_scan_observations()
-            isaac_state = env.root_states.clone()
-            dof_state = torch.hstack([env.dof_pos, env.dof_vel]).clone()
 
         # Step control policy with design in privileged observation
         #* Use the normalized design parameters as the privi_obs has to be clipped
@@ -52,16 +52,22 @@ def rollout_control_loop(
 
         actions = control_policy(obs, modified_privileged_obs, estimated_obs, scan_obs, adaptation_mode=False)
 
-        # Step isaacgym dynamics
-        with torch.no_grad():
-            env.step(actions)
-
         # Step SRB dynamics
         srb_state, motor_torque, info = srb_env.step_srb_dynamics(
             isaac_state,    #! non-diff, critical fix
             dof_state,      # non-diff
             actions,        # diff
         )
+
+        # Step isaacgym dynamics
+        with torch.no_grad():
+            env.step(actions)
+            obs = env.get_observations()
+            privileged_obs = env.get_privileged_observations()
+            estimated_obs = env.get_estimated_observations()
+            scan_obs = env.get_scan_observations()
+            isaac_state = env.root_states.clone()
+            dof_state = torch.hstack([env.dof_pos, env.dof_vel]).clone()
 
         if logger is not None:
             logger.log_control_step(
@@ -74,7 +80,7 @@ def rollout_control_loop(
                 }
             )
 
-        #* No need for state alignment
+        #* State alignment
         next_state = isaac_state + 1.0 * (srb_state - srb_state.detach())
         #* isaac_state: non-diff
         #* srb_state:   diff but slightly different value from isaac_state
