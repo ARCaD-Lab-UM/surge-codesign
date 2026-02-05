@@ -25,11 +25,7 @@ class DesignObjective:
         self.desired_base_height = 0.5
 
         # Multi-objective weights
-        self.objective_weights = {
-            "heating_energy": 1.0,
-            "mechanical_energy": 0.0,
-            "height_tracking_error": 1.0,
-        }
+        self.objective_weights = config.objective_weights
 
     def _calc_energy_consumption(self, dof_state, motor_torque):
         """Calculate energy related objectives
