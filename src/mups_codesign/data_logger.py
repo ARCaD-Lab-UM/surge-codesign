@@ -78,7 +78,7 @@ class DataLogger:
     def __init__(
         self,
         root_dir: str,
-        run_name: str = "codesign"
+        run_name: str = "hopper_codesign"
     ) -> None:
         timestamp = time.strftime("%Y%m%d_%H%M%S")
         self.run_id = timestamp

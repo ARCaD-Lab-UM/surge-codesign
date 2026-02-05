@@ -7,8 +7,8 @@ import torch
 from legged_gym.envs import *
 from legged_gym.utils import get_args, task_registry
 
-from mups_codesign.data_logger import DataLogger
 from mups_codesign.config import CodesignConfig
+from mups_codesign.data_logger import DataLogger
 from mups_codesign.design_objective import DesignObjective
 from mups_codesign.design_space import DesignSpace
 from mups_codesign.isaac_env.hopper import HopperRobot
@@ -36,46 +36,61 @@ def _set_default_camera(env):
 
 
 if __name__ == "__main__":
-    # Parse arguments
+    # Parse isaacgym arguments
     args = get_args()
-
+    args.task = "hopper"
     task_registry.register(
         "hopper",
         HopperRobot,
         HopperCfg(),
         HopperCfgPPO(),
     )
-
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
 
+    #* Initialize codesign config
+    design_config = CodesignConfig(
+        num_envs=4096, 
+        device=args.sim_device,
+        n_control_iter=100,
+    )
+
+    # Override config from codesign config
+    env_cfg.env.num_envs = design_config.num_envs
+    env_cfg.seed = design_config.seed
+    train_cfg.seed = design_config.seed
+
     # Override some parameters for testing
-    env_cfg.env.num_envs = 4096
     env_cfg.terrain.num_rows = 1
     env_cfg.terrain.num_cols = 1
-    env_cfg.terrain.curriculum = False
     env_cfg.noise.add_noise = False
+    env_cfg.commands.zero_command = False
+    env_cfg.commands.ranges.lin_vel_x = [0.0, 0.0]
+    env_cfg.commands.ranges.lin_vel_y = [0.0, 0.0]
     env_cfg.domain_rand.randomize_friction = False
     env_cfg.domain_rand.randomize_base_mass = False
     env_cfg.domain_rand.randomize_center_of_mass = False
     env_cfg.domain_rand.randomize_kp_kd = False
     env_cfg.domain_rand.push_robots = False
-    env_cfg.commands.zero_command = False
-    env_cfg.commands.ranges.lin_vel_x = [0.0, 0.0]
-    env_cfg.commands.ranges.lin_vel_y = [0.0, 0.0]
+
+    # Override train_cfg to load pre-trained policy
+    train_cfg.runner.resume = True
+    train_cfg.runner.load_run = design_config.policy_id
 
     # Make isaacgym environment
     env, _ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
 
     # Load control policy in inference mode
-    train_cfg.runner.resume = True
-    ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args, train_cfg=train_cfg)
+    ppo_runner, _ = task_registry.make_alg_runner(env=env, name=args.task, args=args, train_cfg=train_cfg)
     control_policy = ppo_runner.get_inference_policy(device=env.device)
 
+    # Freeze policy parameters
+    for param in ppo_runner.alg.actor_critic.parameters():
+        param.requires_grad = False
+
     #* Initialize codesign modules
-    design_config = CodesignConfig(num_envs=env.num_envs, device=env.device, dtype=torch.float32)
     srb_env = MupsRobot(design_config)
     design_objective_calculator = DesignObjective(design_config)
-    design_space = DesignSpace(design_config, init_param_values=None, requires_grad=False)
+    design_space = DesignSpace(design_config, requires_grad=False)
     logger = DataLogger(design_config.log_dir)
 
     # Generate a design landscape grid
@@ -121,7 +136,6 @@ if __name__ == "__main__":
     srb_env.set_design_params(grid_param_names, design_param_grid[:, :2])
 
     # Rollout control to evaluate design objective
-    n_control_iter = 100
     with torch.no_grad():
         env.reset()
         total_design_objective, _ = rollout_control_loop(
@@ -130,10 +144,9 @@ if __name__ == "__main__":
             srb_env,
             None,
             design_objective_calculator,
-            n_control_iter,
+            design_config.n_control_iter,
             headless=args.headless,
             modify_priv_obs=False,
-            draw_debug_vis=False,
             # logger=logger
         )
 
@@ -169,6 +182,9 @@ if __name__ == "__main__":
         objective_grid,
         grid_param_names,
         save_path=contour_path,
-        show=False,
+        show=True,
     )
     print(f"Saved contour plot to: {contour_path}")
+
+    # Close logger
+    logger.close()

@@ -20,17 +20,17 @@ pytest -v
 Run design optimization:
 
 ```bash
-python scripts/run_codesign.py --task hopper --headless --load_run rainbow_v1
+python scripts/run_codesign.py --headless
 ```
 
 Collect design landscape for a policy:
 ```bash
-python scripts/collect_landscape.py --task hopper --headless --load_run rainbow_v1
+python scripts/collect_landscape.py --headless
 ```
 
 Plot optimization trajectory over design landscape:
 ```bash
-python scripts/plot_landscape.py --task hopper --policy_id rainbow_v1
+python scripts/plot_landscape.py --policy_id rainbow_v6
 ```
 
 ### Prioritized TODOs:
@@ -50,6 +50,10 @@ python scripts/plot_landscape.py --task hopper --policy_id rainbow_v1
 - [x] We need to plot the episode trajectory of hopper
 - [x] Retrain policy with 4 dim design space, tune design range if necessary
 - [x] Test NN as an individual block
-- [ ] Do a through review of GD and line search and behaviour around local minimum.
 - [x] What's the role of num_envs in design optimization? Only matter if any domain rand is on.
+- [x] Make config actually useful
+- [ ] Disable awkward printing from isaacgym
+- [ ] Add unit tests for FD vs AD
+- [ ] Visualize gradient directions in landscape
+- [ ] Compare FD error with AD over the landscape
 - [ ] Start interfacing with CMA-ES

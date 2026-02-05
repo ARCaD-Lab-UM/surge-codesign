@@ -36,72 +36,79 @@ torch.autograd.set_detect_anomaly(True)
 np.set_printoptions(precision=6, suppress=True)
 torch.set_printoptions(precision=6, sci_mode=False)
 
-# Fix manual seed for reproducibility
-torch.manual_seed(0)
-np.random.seed(0)
-
 
 if __name__ == '__main__':
-    # Parse arguments
+    # Parse isaacgym arguments
     args = get_args()
-
+    args.task = "hopper"
     task_registry.register(
         "hopper",
         HopperRobot,
         HopperCfg(),
         HopperCfgPPO()
     )
-
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
 
-    # Override some parameters for testing
-    env_cfg.env.num_envs = 10
+    #* Initialize codesign config
+    design_config = CodesignConfig(
+        num_envs=10, 
+        device=args.sim_device,
+        n_design_iter=200,
+        n_control_iter=100,
+        learning_rate=2e-3,
+        raw_init_param_values=(6000, 0.11),
+    )
+
+    # Override config from codesign config
+    env_cfg.env.num_envs = design_config.num_envs
+    env_cfg.seed = design_config.seed
+    train_cfg.seed = design_config.seed
+
+    # Override env_cfg for evaluation
     env_cfg.terrain.num_rows = 4
     env_cfg.terrain.num_cols = 4
-    env_cfg.terrain.curriculum = False
     env_cfg.noise.add_noise = False
+    env_cfg.commands.zero_command = False
+    env_cfg.commands.ranges.lin_vel_x = [0.0, 0.0]
+    env_cfg.commands.ranges.lin_vel_y = [0.0, 0.0]
     env_cfg.domain_rand.randomize_friction = False
     env_cfg.domain_rand.randomize_base_mass = False
     env_cfg.domain_rand.randomize_center_of_mass = False
     env_cfg.domain_rand.randomize_kp_kd = False
-    env_cfg.domain_rand.push_robots = False
-    env_cfg.commands.zero_command = False
-    env_cfg.commands.ranges.lin_vel_x = [0.0, 0.0]
-    env_cfg.commands.ranges.lin_vel_y = [0.0, 0.0]
+
+    # Override train_cfg to load pre-trained policy
+    train_cfg.runner.resume = True
+    train_cfg.runner.load_run = design_config.policy_id
 
     # Make isaacgym environment
     env, _ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
 
     # Load control policy in inference mode
-    train_cfg.runner.resume = True
-    ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args, train_cfg=train_cfg)
+    ppo_runner, _ = task_registry.make_alg_runner(env=env, name=args.task, args=args, train_cfg=train_cfg)
     control_policy = ppo_runner.get_inference_policy(device=env.device)
+
+    # Freeze policy parameters
     for param in ppo_runner.alg.actor_critic.parameters():
         param.requires_grad = False
 
-    # TODO: handle these setting in a centralized way, including initial_design_params
     # Codesign parameters
-    N_DESIGN_ITER = 50
-    N_CONTROL_ITER = 100
-    LEARN_RATE = 5e-2
-    initial_design_params = None # torch.tensor([3000, 0.1], device=env.device)
-
+    N_DESIGN_ITER = design_config.n_design_iter
+    N_CONTROL_ITER = design_config.n_control_iter
+    LEARN_RATE = design_config.learning_rate
     print(f"Design Iterations: {N_DESIGN_ITER}, Control Iterations: {N_CONTROL_ITER}")
-    print(f"Initial Design Parameters: {initial_design_params}")
+    print(f"Initial Design Parameters: {design_config.raw_init_param_values}")
 
     #* Initialize codesign modules
-    design_config = CodesignConfig(num_envs=env.num_envs, device=env.device, dtype=torch.float32)
     srb_env = MupsRobot(design_config)
     design_objective_calculator = DesignObjective(design_config)
-    design_space = DesignSpace(design_config, initial_design_params)
+    design_space = DesignSpace(design_config)
+    logger = DataLogger(root_dir=design_config.log_dir)
 
     design_params_normalized = design_space.active_normalized_param_values #* this is the leaf of computation graph, no need to rebuild
 
     # First-order optimizer
     optimizer = optim.Adam([design_params_normalized], lr=LEARN_RATE)
 
-    run_name = f"{args.task}_codesign"
-    logger = DataLogger(root_dir=design_config.log_dir, run_name=run_name)
     logger.log_metadata({
         "args": vars(args),
         "design_config": asdict(design_config),

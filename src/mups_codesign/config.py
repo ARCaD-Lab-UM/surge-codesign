@@ -19,9 +19,19 @@ def default_objective_weights():
 @dataclass
 class CodesignConfig:
     # General config
-    num_envs: int = 1024 # TODO: this should not be overwritten by isaacgym num_envs
-    device: str = "cuda:0"
-    dtype: str = torch.float32
+    seed: int = 0
+    num_envs: int = 1024
+    device: str = "cuda:0"      # this will be overwritten by isaacgym env.device
+    dtype: str = torch.float32  # this only used internally for codesign modules
+
+    # RL policy config
+    # policy_id = "rainbow_v5"  # trained with ks and l0
+    policy_id = "rainbow_v6"    # trained with ks, l0, l2, l4
+
+    # Optimizer config
+    learning_rate: float = None
+    n_design_iter: int = None
+    n_control_iter: int = None
 
     # Design space config
     active_param_names: tuple = ("ups_ks", "ups_l0")
