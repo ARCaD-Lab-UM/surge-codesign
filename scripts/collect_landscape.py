@@ -57,7 +57,7 @@ if __name__ == "__main__":
     env_cfg.domain_rand.randomize_friction = False
     env_cfg.domain_rand.randomize_base_mass = False
     env_cfg.domain_rand.randomize_center_of_mass = False
-    env_cfg.domain_rand.randomize_motor_strength = False
+    env_cfg.domain_rand.randomize_kp_kd = False
     env_cfg.domain_rand.push_robots = False
     env_cfg.commands.zero_command = False
     env_cfg.commands.ranges.lin_vel_x = [0.0, 0.0]
@@ -121,7 +121,7 @@ if __name__ == "__main__":
     srb_env.set_design_params(grid_param_names, design_param_grid[:, :2])
 
     # Rollout control to evaluate design objective
-    n_control_iter = 500
+    n_control_iter = 100
     with torch.no_grad():
         env.reset()
         total_design_objective, _ = rollout_control_loop(
