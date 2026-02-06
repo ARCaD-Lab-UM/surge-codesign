@@ -25,6 +25,7 @@ from mups_codesign.data_logger import DataLogger
 from mups_codesign.design_space import DesignSpace
 from mups_codesign.design_objective import DesignObjective
 from mups_codesign.optim_helper import rollout_control_loop
+from mups_codesign.vis_helper import save_ad_graph
 
 from mups_codesign.isaac_env.hopper import HopperRobot
 from mups_codesign.isaac_env.hopper_config import HopperCfg, HopperCfgPPO
@@ -55,7 +56,7 @@ if __name__ == '__main__':
         device=args.sim_device,
         n_design_iter=200,
         n_control_iter=100,
-        learning_rate=2e-3,
+        learning_rate=1e-2,
         raw_init_param_values=(6000, 0.11),
     )
 
@@ -152,6 +153,8 @@ if __name__ == '__main__':
         optimizer.zero_grad()
         loss = total_design_objective.mean()
         loss.backward()
+
+        # save_ad_graph(loss, {"param:": design_space.active_normalized_param_values})
 
         # Record and clip gradients
         grad_values = None

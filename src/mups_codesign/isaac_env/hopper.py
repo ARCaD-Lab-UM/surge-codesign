@@ -263,15 +263,11 @@ class HopperRobot(LeggedRobot):
         softplus = torch.nn.functional.softplus(l0 * 1.0e+3-l3 * 1.0e+3+l6 * 1.0e+3+t3 * t4 * 1.0e+3+torch.sqrt(t11) * 1.0e+3)
         tau = (Ks * softplus * (t6 - t3 * t4 * t8 * 1.0 / torch.sqrt(t11))) / 1.0e+3
 
-        # TODO double check the peak torque after switch back to the correct spring function
-        # print(tau.max().item(), tau.min().item())
-
         try:
             assert torch.isfinite(tau).all(), "NaN or inf in spring torque calculation"
         except:
             pdb.set_trace()
 
-        # return torch.nan_to_num(tau, nan=0.0) # Replace NaN with 0.0
         return tau
 
     def step(self, actions):
