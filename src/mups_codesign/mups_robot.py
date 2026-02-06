@@ -40,7 +40,7 @@ class MupsRobot:
     def _get_rot_mat_y(self, theta):
         c = torch.cos(theta)
         s = torch.sin(theta)
-        rot_mat = torch.zeros((self.num_env, 3, 3), device=self.device)
+        rot_mat = torch.zeros((self.num_env, 3, 3), device=self.device, dtype=self.dtype)
         rot_mat[:, 0, 0] = c
         rot_mat[:, 0, 1] = 0
         rot_mat[:, 0, 2] = s
@@ -51,7 +51,6 @@ class MupsRobot:
         rot_mat[:, 2, 1] = 0
         rot_mat[:, 2, 2] = c
         return rot_mat
-
 
     def _calc_joint_pd_torques(self, dof_pos, dof_vel, action):
         # Clip and scale actions
@@ -64,13 +63,12 @@ class MupsRobot:
 
         return clipped_torque
 
-
     def _calc_foot_position(self, pos, pitch, dof_pos):
         q1 = dof_pos[:, 0]  # hip
         q2 = dof_pos[:, 1]  # knee
         
         # Calculate foot position
-        foot_pos_body = torch.zeros((self.num_env, 3), device=self.device)
+        foot_pos_body = torch.zeros((self.num_env, 3), device=self.device, dtype=self.dtype)
         foot_pos_body[:, 0] = - self.l1 * torch.sin(q1) - self.l2 * torch.sin(q1 + q2)
         foot_pos_body[:, 2] = - self.l1 * torch.cos(q1) - self.l2 * torch.cos(q1 + q2)
 
@@ -79,19 +77,17 @@ class MupsRobot:
 
         return foot_pos_world
 
-
     def _calc_foot_jacobian(self, dof_pos):
         q1 = dof_pos[:, 0]  # hip
         q2 = dof_pos[:, 1]  # knee
 
-        foot_jac = torch.zeros((self.num_env, 2, 2), device=self.device)
+        foot_jac = torch.zeros((self.num_env, 2, 2), device=self.device, dtype=self.dtype)
         foot_jac[:, 0, 0] = - self.l1 * torch.cos(q1) - self.l2 * torch.cos(q1 + q2)
         foot_jac[:, 0, 1] = - self.l2 * torch.cos(q1 + q2)
         foot_jac[:, 1, 0] = self.l1 * torch.sin(q1) + self.l2 * torch.sin(q1 + q2)
         foot_jac[:, 1, 1] = self.l2 * torch.sin(q1 + q2)
 
         return foot_jac
-
 
     def step_srb_dynamics(self, root_state, dof_state, action):
         # TODO vz and wy is inaccurate by a lot
@@ -123,7 +119,7 @@ class MupsRobot:
         self.foot_force = foot_force
 
         # Update 2D SRB dynamics
-        com_acc = torch.zeros((self.num_env, 3), device=self.device)
+        com_acc = torch.zeros((self.num_env, 3), device=self.device, dtype=self.dtype)
         com_acc[:, 0] = foot_force[:, 0] / self.mass
         com_acc[:, 1] = 0.0
         com_acc[:, 2] = (foot_force[:, 1] - self.mass * self.gravity) / self.mass
