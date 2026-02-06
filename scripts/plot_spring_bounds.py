@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from mups_codesign.config import CodesignConfig
 from mups_codesign.design_space import DesignSpace
 from mups_codesign.mups_spring import MupsSpring
+import mups_codesign.vis_helper # import global matplotlib settings
 
 
 def plot_spring_bounds(cfg: CodesignConfig, knee_pos_limits=(-2.7, -0.4), num_points=100):
@@ -46,6 +47,9 @@ def plot_spring_bounds(cfg: CodesignConfig, knee_pos_limits=(-2.7, -0.4), num_po
     axes[0].set_title("Spring Torque at Lower Bound")
     axes[0].set_xlabel("Knee Position (rad)")
     axes[0].set_ylabel("Spring Torque (Nm)")
+    axes[0].axhline(0.0, color="black", linestyle="--")
+    axes[0].axvline(knee_pos_limits[0], color="black", linestyle="--")
+    axes[0].axvline(knee_pos_limits[1], color="black", linestyle="--")
     axes[0].grid(True)
 
     # Upper bound
@@ -63,6 +67,9 @@ def plot_spring_bounds(cfg: CodesignConfig, knee_pos_limits=(-2.7, -0.4), num_po
     axes[1].set_title("Spring Torque at Upper Bound")
     axes[1].set_xlabel("Knee Position (rad)")
     axes[1].set_ylabel("Spring Torque (Nm)")
+    axes[1].axhline(0.0, color="black", linestyle="--")
+    axes[1].axvline(knee_pos_limits[0], color="black", linestyle="--")
+    axes[1].axvline(knee_pos_limits[1], color="black", linestyle="--")
     axes[1].grid(True)
 
     plt.tight_layout()
@@ -73,5 +80,6 @@ if __name__ == "__main__":
     torch.set_printoptions(precision=4, sci_mode=False)
     torch.manual_seed(0)
 
-    cfg = CodesignConfig(num_envs=1, device="cpu", dtype=torch.float32)
+    param_names = ("ups_ks", "ups_l0", "ups_l2", "ups_l4")
+    cfg = CodesignConfig(num_envs=1, device="cpu", active_param_names=param_names)
     plot_spring_bounds(cfg)
