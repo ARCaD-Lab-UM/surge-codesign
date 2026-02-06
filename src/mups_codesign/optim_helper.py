@@ -7,6 +7,7 @@ import time
 from collections import defaultdict
 
 import torch
+from isaacgym.torch_utils import quat_rotate_inverse
 from torch import nn
 
 from mups_codesign.data_logger import DataLogger
@@ -24,6 +25,7 @@ def rollout_control_loop(
     num_steps: int,
     headless: bool,
     modify_priv_obs: bool=True,
+    modify_cur_obs: bool=False,
     logger: DataLogger = None,
 ):
     total_design_objective = torch.zeros(env.num_envs, device=env.device)
@@ -50,7 +52,22 @@ def rollout_control_loop(
             # TODO: and handle it outside this function
             modified_privileged_obs[:, -2:] = param_values_normalized[:2].unsqueeze(0)
 
-        actions = control_policy(obs, modified_privileged_obs, estimated_obs, scan_obs, adaptation_mode=False)
+        # TODO: verify this is actually helpful
+        # Fill obs with aligned next_state to carry gradients from SRB
+        partial_diff_obs_from_srb = torch.cat(
+            (
+                next_state[:, 2:3] * env.obs_scales.xyz_pos, # height
+                next_state[:, 7:10] * env.obs_scales.lin_vel, # lin vel
+                next_state[:, 10:13] * env.obs_scales.ang_vel, # ang vel
+                quat_rotate_inverse(next_state[:, 3:7], env.gravity_vec), # projected gravity
+            ),
+            dim=-1
+        ) # (num_envs, 10)
+        modified_obs = obs.clone()
+        if modify_cur_obs:
+            modified_obs[:, -env.num_proprio:-env.num_proprio+10] = partial_diff_obs_from_srb
+
+        actions = control_policy(modified_obs, modified_privileged_obs, estimated_obs, scan_obs, adaptation_mode=False)
 
         # Step SRB dynamics
         srb_state, motor_torque, info = srb_env.step_srb_dynamics(
