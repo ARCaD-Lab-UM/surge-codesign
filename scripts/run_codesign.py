@@ -1,7 +1,3 @@
-"""
-Thin CLI that selects optimizer and calls optim.py. All isaacgym imports and logic isolated here.
-"""
-
 import isaacgym
 
 import pdb
@@ -17,18 +13,14 @@ from torch import optim
 
 from legged_gym import LEGGED_GYM_ROOT_DIR
 from legged_gym.envs import *
-from legged_gym.utils import get_args, task_registry
 
 from mups_codesign.mups_robot import MupsRobot
 from mups_codesign.config import CodesignConfig
 from mups_codesign.data_logger import DataLogger
 from mups_codesign.design_space import DesignSpace
 from mups_codesign.design_objective import DesignObjective
-from mups_codesign.optim_helper import rollout_control_loop
+from mups_codesign.optim_helper import rollout_control_loop, setup_isaac_env_and_policy
 from mups_codesign.vis_helper import save_ad_graph
-
-from mups_codesign.isaac_env.hopper import HopperRobot
-from mups_codesign.isaac_env.hopper_config import HopperCfg, HopperCfgPPO
 
 
 torch.autograd.set_detect_anomaly(True)
@@ -39,58 +31,18 @@ torch.set_printoptions(precision=6, sci_mode=False)
 
 
 if __name__ == '__main__':
-    # Parse isaacgym arguments
-    args = get_args()
-    args.task = "hopper"
-    task_registry.register(
-        "hopper",
-        HopperRobot,
-        HopperCfg(),
-        HopperCfgPPO()
-    )
-    env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
-
     #* Initialize codesign config
     design_config = CodesignConfig(
         num_envs=10, 
-        device=args.sim_device,
+        device="cuda",
         n_design_iter=200,
         n_control_iter=100,
         learning_rate=1e-2,
         raw_init_param_values=(6000, 0.11),
     )
 
-    # Override config from codesign config
-    env_cfg.env.num_envs = design_config.num_envs
-    env_cfg.seed = design_config.seed
-    train_cfg.seed = design_config.seed
-
-    # Override env_cfg for evaluation
-    env_cfg.terrain.num_rows = 4
-    env_cfg.terrain.num_cols = 4
-    env_cfg.noise.add_noise = False
-    env_cfg.commands.zero_command = False
-    env_cfg.commands.ranges.lin_vel_x = [0.0, 0.0]
-    env_cfg.commands.ranges.lin_vel_y = [0.0, 0.0]
-    env_cfg.domain_rand.randomize_friction = False
-    env_cfg.domain_rand.randomize_base_mass = False
-    env_cfg.domain_rand.randomize_center_of_mass = False
-    env_cfg.domain_rand.randomize_kp_kd = False
-
-    # Override train_cfg to load pre-trained policy
-    train_cfg.runner.resume = True
-    train_cfg.runner.load_run = design_config.policy_id
-
-    # Make isaacgym environment
-    env, _ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
-
-    # Load control policy in inference mode
-    ppo_runner, _ = task_registry.make_alg_runner(env=env, name=args.task, args=args, train_cfg=train_cfg)
-    control_policy = ppo_runner.get_inference_policy(device=env.device)
-
-    # Freeze policy parameters
-    for param in ppo_runner.alg.actor_critic.parameters():
-        param.requires_grad = False
+    # Setup isaacgym environment and control policy
+    env, control_policy = setup_isaac_env_and_policy(design_config)
 
     # Codesign parameters
     N_DESIGN_ITER = design_config.n_design_iter
@@ -111,7 +63,6 @@ if __name__ == '__main__':
     optimizer = optim.Adam([design_params_normalized], lr=LEARN_RATE)
 
     logger.log_metadata({
-        "args": vars(args),
         "design_config": asdict(design_config),
         "param_names": list(design_space.active_param_names),
         "n_design_iter": N_DESIGN_ITER,
@@ -146,7 +97,7 @@ if __name__ == '__main__':
             design_params_normalized,
             design_objective_calculator,
             N_CONTROL_ITER,
-            headless=args.headless
+            headless=env.headless
         )
 
         # Backprop
