@@ -59,8 +59,8 @@ class DesignSpace:
         init_param_values = self.default_param_values[self.active_param_indices].clone()
         raw_init_param_values = config.raw_init_param_values # tuple or None
         if raw_init_param_values is not None:
-            assert len(raw_init_param_values) == len(self.active_param_names), \
-                f"init_param_values shape {len(raw_init_param_values)} does not match active design dimension {len(self.active_param_names)}"
+            assert len(raw_init_param_values) == self.num_active_params, \
+                f"init_param_values shape {len(raw_init_param_values)} does not match active design dimension {self.num_active_params}"
             init_param_values = torch.tensor(
                 raw_init_param_values,
                 dtype=self.dtype,
@@ -71,6 +71,10 @@ class DesignSpace:
             init_param_values / self.active_param_scales,
             requires_grad=requires_grad
         )  # (len(active_param_names), )
+
+    @property
+    def num_active_params(self):
+        return len(self.active_param_names)
 
     @property
     def active_param_scales(self):
@@ -98,3 +102,15 @@ class DesignSpace:
                 self.active_normalized_param_bounds[:, 0],
                 self.active_normalized_param_bounds[:, 1]
             )
+
+    def sample_active_param_values(self):
+        """Sample active design parameters uniformly within bounds."""
+        rand_vals = torch.rand(
+            (self.num_active_params,),
+            dtype=self.dtype,
+            device=self.device
+        )
+        lower_bounds = self.active_param_bounds[:, 0]
+        upper_bounds = self.active_param_bounds[:, 1]
+        sampled_params = lower_bounds + rand_vals * (upper_bounds - lower_bounds)
+        return sampled_params
