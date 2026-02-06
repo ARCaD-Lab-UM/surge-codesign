@@ -14,7 +14,7 @@ pip install -e .
 Run unit tests:
 
 ```bash
-pytest -v
+pytest -v -s
 ```
 
 Run design optimization:
@@ -52,8 +52,8 @@ python scripts/plot_landscape.py --policy_id rainbow_v6
 - [x] Test NN as an individual block
 - [x] What's the role of num_envs in design optimization? Only matter if any domain rand is on.
 - [x] Make config actually useful
-- [ ] Disable awkward printing from isaacgym
-- [ ] Add unit tests for FD vs AD
+- [x] Disable awkward printing from isaacgym
+- [x] Add unit tests for FD vs AD
 - [ ] Visualize gradient directions in landscape
 - [ ] Compare FD error with AD over the landscape
 - [ ] Start interfacing with CMA-ES
