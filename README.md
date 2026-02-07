@@ -55,5 +55,5 @@ python scripts/plot_landscape.py --policy_id rainbow_v6
 - [x] Disable awkward printing from isaacgym
 - [x] Add unit tests for FD vs AD
 - [x] Visualize gradient field over landscape
-- [ ] ~~Compare FD error with AD over the landscape~~ FD through isaac env gives super noise gradients
+- [ ] ~~Compare FD error with AD over the landscape~~ FD through isaac env gives weird gradients
 - [ ] Start interfacing with CMA-ES
