@@ -82,7 +82,7 @@ class DataLogger:
     ) -> None:
         timestamp = time.strftime("%Y%m%d_%H%M%S")
         self.run_id = timestamp
-        self.run_dir = os.path.join(root_dir, f"{run_name}_{timestamp}")
+        self.run_dir = os.path.join(root_dir, "optim", f"{run_name}_{timestamp}")
         os.makedirs(self.run_dir, exist_ok=True)
 
         self.metrics_path = os.path.join(self.run_dir, "metrics.jsonl")
