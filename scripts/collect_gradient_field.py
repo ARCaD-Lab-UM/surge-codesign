@@ -82,7 +82,8 @@ if __name__ == "__main__":
     # Initialize codesign config
     objective_weights = {
         "heating_energy": 1.0,
-        "height_tracking_error": 0.0,
+        "mechanical_energy": 0.0,
+        "height_tracking_error": 5.0,
     }
     design_config = CodesignConfig(
         num_envs=num_envs,  # Parallel environments for all grid points

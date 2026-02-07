@@ -107,6 +107,8 @@ def compute_gradient_field_fd_parallel(
             # Create perturbation for parameter k
             delta = torch.zeros_like(param_grid)
             delta[:, k] = epsilon
+            if k == 0:
+                delta[:, k] = epsilon * 50000  # scale first param differently for hopper ups_ks
             
             print(f"  Evaluating +epsilon on param {k}...")
             param_plus = param_grid + delta
@@ -154,6 +156,8 @@ if __name__ == "__main__":
     # Initialize codesign config
     objective_weights = {
         "heating_energy": 1.0,
+        "mechanical_energy": 0.0,
+        "height_tracking_error": 5.0,
     }
     design_config = CodesignConfig(
         num_envs=num_envs,  # Parallel environments for all grid points
