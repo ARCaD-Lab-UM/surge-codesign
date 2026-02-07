@@ -104,7 +104,12 @@ def rollout_control_loop(
         if modify_priv_obs:
             # TODO: after the full policy is trained, we should always pass a full set of design params
             # TODO: and handle it outside this function
-            modified_privileged_obs[:, -2:] = param_values_normalized[:2].unsqueeze(0)
+            if param_values_normalized.ndim == 1:
+                modified_privileged_obs[:, -2:] = param_values_normalized[:2].unsqueeze(0)
+            elif param_values_normalized.ndim == 2:
+                modified_privileged_obs[:, -2:] = param_values_normalized
+            else:
+                raise ValueError(f"Unexpected shape for param_values_normalized: {param_values_normalized.shape}")
 
         # TODO: verify this is actually helpful
         # Fill obs with aligned next_state to carry gradients from SRB
