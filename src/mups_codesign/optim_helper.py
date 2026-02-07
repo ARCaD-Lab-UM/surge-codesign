@@ -24,6 +24,7 @@ def setup_isaac_env_and_policy(design_config: CodesignConfig):
     # Parse isaacgym arguments
     args = get_args()
     args.task = "hopper"
+    args.headless = True
     args.load_run = design_config.policy_id
     task_registry.register(
         "hopper",
@@ -107,7 +108,7 @@ def rollout_control_loop(
             if param_values_normalized.ndim == 1:
                 modified_privileged_obs[:, -2:] = param_values_normalized[:2].unsqueeze(0)
             elif param_values_normalized.ndim == 2:
-                modified_privileged_obs[:, -2:] = param_values_normalized
+                modified_privileged_obs[:, -2:] = param_values_normalized[:, :2]
             else:
                 raise ValueError(f"Unexpected shape for param_values_normalized: {param_values_normalized.shape}")
 
