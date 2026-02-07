@@ -94,6 +94,62 @@ def plot_surface(
         plt.show()
     plt.close(fig)
 
+def plot_gradient_vector_field(
+    param1_grid,
+    param2_grid,
+    grad1_grid,
+    grad2_grid,
+    objective_grid,
+    grid_param_names,
+    grad_magnitude=1,
+    save_path=None,
+    show=False,
+):
+    """Plot gradient vector field overlaid on objective contour."""
+    fig, ax = plt.subplots(figsize=(10, 8))
+
+    # Plot objective contour as background
+    contour = ax.contourf(
+        param1_grid, param2_grid, objective_grid,
+        levels=20, cmap="viridis", alpha=0.7
+    )
+    fig.colorbar(contour, ax=ax, label="Design Objective")
+    
+    # Use negative gradients to show descent direction
+    grad1_normalized = -grad1_grid / grad_magnitude
+    grad2_normalized = -grad2_grid / grad_magnitude
+
+    # Plot gradient vector field (quiver)
+    # Subsample for cleaner visualization if grid is dense
+    step = max(1, param1_grid.shape[0] // 16)
+    ax.quiver(
+        param1_grid[::step, ::step],
+        param2_grid[::step, ::step],
+        grad1_normalized[::step, ::step],
+        grad2_normalized[::step, ::step],
+        color="white",
+        alpha=0.9,
+        scale=25,
+        width=0.004,
+        headwidth=4,
+        headlength=5,
+    )
+
+    ax.set_xlabel(grid_param_names[0])
+    ax.set_ylabel(grid_param_names[1])
+    ax.set_title("Gradient Vector Field (Descent Direction)")
+
+    fig.tight_layout()
+    if save_path:
+        fig.savefig(save_path)
+        print(f"Saved gradient vector field to: {save_path}")
+
+    if show:
+        plt.show()
+
+    plt.close(fig)
+
+
 def save_ad_graph(loss, vars:dict, filename="autograd_graph"):
     dot = make_dot(loss, params=vars)
     dot.format = "png"
