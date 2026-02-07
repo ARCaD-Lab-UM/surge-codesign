@@ -102,6 +102,7 @@ def plot_gradient_vector_field(
     objective_grid,
     grid_param_names,
     grad_magnitude=1,
+    step=1,
     save_path=None,
     show=False,
 ):
@@ -120,8 +121,6 @@ def plot_gradient_vector_field(
     grad2_normalized = -grad2_grid / grad_magnitude
 
     # Plot gradient vector field (quiver)
-    # Subsample for cleaner visualization if grid is dense
-    step = max(1, param1_grid.shape[0] // 16)
     ax.quiver(
         param1_grid[::step, ::step],
         param2_grid[::step, ::step],

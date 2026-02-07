@@ -62,6 +62,12 @@ def main():
         type=float,
         default=1.0,
         help="Scaling factor for gradient vectors in the plot")
+    parser.add_argument(
+        "--step",
+        type=int,
+        default=1,
+        help="Subsampling step for quiver plot (e.g., 2 means every other point)"
+    )
     args = parser.parse_args()
 
     # Find the npz file
@@ -112,6 +118,7 @@ def main():
         save_path=output_path,
         show=not args.no_show,
         grad_magnitude=args.grad_magnitude,
+        step=args.step,
     )
 
 
