@@ -57,4 +57,4 @@ python scripts/plot_landscape.py --policy_id rainbow_v6
 - [x] Visualize AD gradient field over landscape
 - [x] Visualize FD gradient field over landscape
 - [x] Make rollout_control_loop easier to take different combination of params
-- [ ] Start interfacing with CMA-ES
+- [x] Start interfacing with CMA-ES

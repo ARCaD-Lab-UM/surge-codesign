@@ -31,14 +31,14 @@ def plot_contour(
 
     # Overlay the optimization trajectory if provided
     if trajectory is not None and trajectory.shape[0] > 0:
-        n_points = trajectory.shape[0]
-        alpha_values = np.linspace(0.7, 1, n_points)
-        colors = np.zeros((n_points, 4))
-        colors[:, 3] = alpha_values  # RGB stays at 0 (black), only alpha varies
-
-        ax.scatter(trajectory[:, 0], trajectory[:, 1], color=colors, s=90, marker="^", label="Optimization Path")
+        ax.scatter(trajectory[:, 0], trajectory[:, 1], color="black", s=20, marker="^", label="Optimization Path")
         ax.scatter(trajectory[0, 0], trajectory[0, 1], color="cyan", s=100, marker="s", edgecolor="black", label="Start")
         ax.scatter(trajectory[-1, 0], trajectory[-1, 1], color="magenta", s=150, marker="*", edgecolor="black", label="Final Best")
+        # Add iteration number labels (first 10 and last one)
+        for i, (x, y) in enumerate(trajectory):
+            ax.annotate(str(i), (x, y), fontsize=10, color="white", 
+                        ha="center", va="bottom", xytext=(0, 3),
+                        textcoords="offset points")
         ax.legend()
 
     fig.tight_layout()
