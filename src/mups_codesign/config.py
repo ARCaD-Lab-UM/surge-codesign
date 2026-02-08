@@ -12,7 +12,7 @@ def default_objective_weights():
     return {
         "heating_energy": 1.0,
         "mechanical_energy": 0.0,
-        "height_tracking_error": 0.0,
+        "height_tracking_error": 5.0,
     }
 
 

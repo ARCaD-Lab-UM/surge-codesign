@@ -33,7 +33,7 @@ class MupsSpring:
         assert len(names) == len(values), "DesignSpace PARAM_NAMES/PARAM_VALUES length mismatch"
         self.design_param_dict = {name: value for name, value in zip(names, values)}
 
-        # Vectorize param dict to tensor in shape (num_envs, num_params)
+        # Vectorize param dict values to tensors in shape (num_envs, num_params)
         for key in self.design_param_dict.keys():
             self.design_param_dict[key] = torch.full(
                 (self.num_envs,),

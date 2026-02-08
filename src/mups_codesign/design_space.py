@@ -9,6 +9,7 @@ from mups_codesign.config import CodesignConfig
 
 
 class DesignSpace:
+    PARAM_NUMS = 4
     PARAM_NAMES = (
         "ups_ks",  # Spring stiffness (N/m)
         "ups_l0",  # Spring rest length (m)
