@@ -5,6 +5,7 @@ import pdb
 import torch
 
 from mups_codesign.config import CodesignConfig
+from mups_codesign.design_space import DesignSpace
 from mups_codesign.mups_spring import MupsSpring
 
 
@@ -32,10 +33,17 @@ class MupsRobot:
         self.torque_limit = 35.0
 
         self.mups_spring = MupsSpring(config)
+        self.design_param_scales = torch.tensor(DesignSpace.PARAM_VALUES, device=self.device, dtype=self.dtype).unsqueeze(0)  # (1, num_params)
+        self.design_param_values = torch.stack(list(self.mups_spring.design_param_dict.values()), dim=1)  # (num_envs, num_params)
+        self.normalized_design_params = self.design_param_values / self.design_param_scales  # (num_envs, num_params)
 
     def set_design_params(self, param_names, param_values):
         # param_values shape: (num_envs, active_dim) or (1, active_dim)
         self.mups_spring.update_design_param_dict(param_names, param_values, print_info=False)
+
+        # Since python dict preserve insertion order, we can convert it to tensor in the correct order
+        self.design_param_values = torch.stack(list(self.mups_spring.design_param_dict.values()), dim=1)  # (num_envs, num_params)
+        self.normalized_design_params = self.design_param_values / self.design_param_scales  # (num_envs, num_params)
 
     def _get_rot_mat_y(self, theta):
         c = torch.cos(theta)
