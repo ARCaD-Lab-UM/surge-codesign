@@ -55,7 +55,6 @@ def evaluate_objective_batch(
             env,
             control_policy,
             srb_env,
-            None,  # no normalized params needed for FD
             design_objective_calculator,
             n_control_iter,
             headless=env.headless,

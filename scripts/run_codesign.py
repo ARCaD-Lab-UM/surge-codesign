@@ -80,13 +80,13 @@ if __name__ == '__main__':
         # Retrieve design variables in shape (num_params,)
         param_names = design_space.active_param_names
         param_values = design_space.active_param_values #* this is not the leaf of computation graph, so it has to be rebuilt every iteration
-        param_values_detached = design_space.detached_active_param_values
-        params_eval = param_values_detached.cpu().numpy()
+        param_values_detached = design_space.detached_active_param_values # (num_params, )
+        params_eval = param_values_detached.cpu().numpy() # (num_params, )
         params_normalized_eval = design_params_normalized.detach().cpu().numpy()
 
         # Set design parameters for each environment
-        env.set_design_params(param_values_detached[None, :]) # (num_envs, num_params)
-        srb_env.set_design_params(param_names, param_values[None, :]) # keep grad
+        env.set_design_params(param_values_detached[None, :]) # (1, num_params)
+        srb_env.set_design_params(param_names, param_values.unsqueeze(0).expand(design_config.num_envs, -1)) # (num_envs, num_params)
         with torch.no_grad():
             env.reset()
 
@@ -94,7 +94,6 @@ if __name__ == '__main__':
             env,
             control_policy,
             srb_env,
-            design_params_normalized,
             design_objective_calculator,
             N_CONTROL_ITER,
             headless=env.headless

@@ -26,7 +26,8 @@ class CodesignConfig:
 
     # RL policy config
     # policy_id = "rainbow_v5"  # trained with ks and l0
-    policy_id = "rainbow_v6"    # trained with ks, l0, l2, l4
+    # policy_id = "rainbow_v6"    # trained with ks, l0, l2, l4
+    policy_id = "rainbow_v7"    # trained with ks, l0, l2, l4 and all in privileged obs
 
     # Optimizer config
     learning_rate: float = None

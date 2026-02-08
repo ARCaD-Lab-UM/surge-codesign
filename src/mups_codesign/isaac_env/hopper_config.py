@@ -7,10 +7,10 @@ class HopperCfg( LeggedRobotCfg ):
         num_envs = 1024
         num_proprio = 1+3+3+3+3+2+2+2+2 # (z, lin_vel, ang_vel, proj_grav, vel_cmd, dof_pos, dof_vel, prev_actions, phase_features)
         num_scan_obs = 0
-        num_estimated_obs = 3 # lin_vel
+        num_estimated_obs = 1 # lin_vel
         num_actions = 2
 
-        num_privileged_obs = 4+1+2+2+2 # (com_pos, friction, kp, kd, design_params)
+        num_privileged_obs = 4+1+2+2+2+2 # (com_pos, friction, kp, kd, design_params)
         history_buffer_length = 10
         num_critic_obs = num_proprio+(num_proprio*history_buffer_length)+num_privileged_obs+num_estimated_obs+num_scan_obs
         num_observations = num_proprio+(num_proprio*history_buffer_length)
@@ -28,7 +28,7 @@ class HopperCfg( LeggedRobotCfg ):
         curriculum = False
         selected = False
 
-        restitution = 0.5 #!
+        restitution = 0.8 #!
 
     class domain_rand:
         randomize_friction = True

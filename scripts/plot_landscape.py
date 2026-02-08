@@ -57,7 +57,7 @@ def _find_latest_run_dir(log_root, run_prefix):
 
 
 def _load_optimization_trajectory(log_root, task, param_names):
-    run_prefix = f"{task}_codesign"
+    run_prefix = f"optim/{task}_codesign"
     run_dir = _find_latest_run_dir(log_root, run_prefix)
     if not run_dir:
         return None, None

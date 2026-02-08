@@ -99,7 +99,6 @@ if __name__ == "__main__":
             env,
             control_policy,
             srb_env,
-            None,
             design_objective_calculator,
             design_config.n_control_iter,
             headless=env.headless,

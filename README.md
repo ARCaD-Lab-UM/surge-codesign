@@ -54,6 +54,7 @@ python scripts/plot_landscape.py --policy_id rainbow_v6
 - [x] Make config actually useful
 - [x] Disable awkward printing from isaacgym
 - [x] Add unit tests for FD vs AD
-- [x] Visualize gradient field over landscape
-- [ ] ~~Compare FD error with AD over the landscape~~ FD through isaac env gives weird gradients
+- [x] Visualize AD gradient field over landscape
+- [x] Visualize FD gradient field over landscape
+- [x] Make rollout_control_loop easier to take different combination of params
 - [ ] Start interfacing with CMA-ES

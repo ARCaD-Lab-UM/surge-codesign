@@ -49,6 +49,7 @@ class MupsSpring:
             param_names (list of str): List of parameter names to set.
             param_values (tensor): (num_envs, num_params) Tensor of parameter values.
         """
+        assert param_values.shape == (self.num_envs, len(param_names)), f"Expected param_values shape {(self.num_envs, len(param_names))}, got {param_values.shape}"
         for i, name in enumerate(param_names):
             if name in self.design_param_dict:
                 self.design_param_dict[name] = param_values[:, i]

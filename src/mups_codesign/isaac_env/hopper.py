@@ -68,18 +68,21 @@ class HopperRobot(LeggedRobot):
         ], dim=-1)
 
         # PRIVILEGED OBS
-        self.privileged_obs_buf = torch.cat((
-            self.privileged_mass_params,        # 4
-            self.privileged_friction_coeffs,    # 1
-            self.kp_kd_multipliers[0] - 1,      # 2
-            self.kp_kd_multipliers[1] - 1,      # 2
-            self.design_params[:, :2] * self.design_params_scale[:, :2]), #ks, l0
+        self.privileged_obs_buf = torch.cat(
+            (
+                self.privileged_mass_params,        # 4
+                self.privileged_friction_coeffs,    # 1
+                self.kp_kd_multipliers[0] - 1,      # 2
+                self.kp_kd_multipliers[1] - 1,      # 2
+                self.design_params[:, :2] * self.design_params_scale[:, :2],  # ks, l0
+                self.design_params[:, [3, 5]] * self.design_params_scale[:, [3, 5]], # l2, l4
+            ),
             dim=-1
         )
-        
+
         # ESTIMATED OBS
-        self.estimated_obs_buf = torch.zeros_like(self.base_lin_vel)
-        
+        self.estimated_obs_buf = torch.zeros_like(self.base_lin_vel[:, 0:1])
+
         # CRITIC OBS
         self.critic_obs_buf = torch.cat((
             self.obs_buf.clone().detach(),
@@ -201,7 +204,7 @@ class HopperRobot(LeggedRobot):
         num_params = 0
         if params is not None:
             num_params = params.shape[1]
-            assert(num_params <= 2, f"Expected ks or ks and l0, got {num_params} parameters.")
+            assert(num_params <= 4, f"Expected at most 4, got {num_params} parameters.")
 
         # Overwrite design parameters if provided
         self.design_params = torch.zeros(self.num_envs, 8, device=self.device)
@@ -216,7 +219,9 @@ class HopperRobot(LeggedRobot):
 
         self.design_params_scale = torch.ones(self.num_envs, 8, device=self.device)
         self.design_params_scale[:, 0] = 1 / ks # ks
-        self.design_params_scale[:, 1] = 1 / l0    # l0
+        self.design_params_scale[:, 1] = 1 / l0 # l0
+        self.design_params_scale[:, 3] = 1 / l2 # l2
+        self.design_params_scale[:, 5] = 1 / l4 # l4
 
         #! TODO only sweep params during training
         # # Random sample ks, l0, l2, l4 from their respective bounds

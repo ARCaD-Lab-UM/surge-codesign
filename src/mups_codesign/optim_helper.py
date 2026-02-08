@@ -15,6 +15,7 @@ from torch import nn
 from mups_codesign.config import CodesignConfig
 from mups_codesign.data_logger import DataLogger
 from mups_codesign.design_objective import DesignObjective
+from mups_codesign.design_space import DesignSpace
 from mups_codesign.isaac_env.hopper import HopperRobot
 from mups_codesign.isaac_env.hopper_config import HopperCfg, HopperCfgPPO
 from mups_codesign.mups_robot import MupsRobot
@@ -75,7 +76,6 @@ def rollout_control_loop(
     env: HopperRobot,
     control_policy: nn.Sequential,
     srb_env: MupsRobot,
-    param_values_normalized: nn.Parameter,
     objective_calculator: DesignObjective,
     num_steps: int,
     headless: bool,
@@ -103,14 +103,7 @@ def rollout_control_loop(
         #* Use the normalized design parameters as the privi_obs has to be clipped
         modified_privileged_obs = privileged_obs.clone()
         if modify_priv_obs:
-            # TODO: after the full policy is trained, we should always pass a full set of design params
-            # TODO: and handle it outside this function
-            if param_values_normalized.ndim == 1:
-                modified_privileged_obs[:, -2:] = param_values_normalized[:2].unsqueeze(0)
-            elif param_values_normalized.ndim == 2:
-                modified_privileged_obs[:, -2:] = param_values_normalized[:, :2]
-            else:
-                raise ValueError(f"Unexpected shape for param_values_normalized: {param_values_normalized.shape}")
+            modified_privileged_obs[:, -DesignSpace.PARAM_NUMS:] = srb_env.normalized_design_params
 
         # TODO: verify this is actually helpful
         # Fill obs with aligned next_state to carry gradients from SRB

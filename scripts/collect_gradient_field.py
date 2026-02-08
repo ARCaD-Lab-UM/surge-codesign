@@ -56,7 +56,6 @@ def compute_gradient_field_parallel(
         env,
         control_policy,
         srb_env,
-        normalized_params,
         design_objective_calculator,
         n_control_iter,
         headless=env.headless,
