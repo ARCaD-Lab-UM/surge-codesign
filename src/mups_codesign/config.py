@@ -35,7 +35,7 @@ class CodesignConfig:
     n_control_iter: int = None
 
     # Design space config
-    active_param_names: tuple = ("ups_ks", "ups_l0")
+    active_param_names: tuple = ("ups_ks", "ups_l0", "ups_l2", "ups_l4") # if None, use all parameters in design space
     raw_init_param_values: tuple = None  # if None, use default param values
 
     # MUPS spring config

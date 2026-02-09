@@ -35,10 +35,10 @@ if __name__ == '__main__':
     design_config = CodesignConfig(
         num_envs=10, 
         device="cuda",
-        n_design_iter=200,
+        n_design_iter=50,
         n_control_iter=100,
         learning_rate=1e-2,
-        raw_init_param_values=(6000, 0.11),
+        raw_init_param_values=(7000, 0.15, 0.1, 0.02),
     )
 
     # Setup isaacgym environment and control policy

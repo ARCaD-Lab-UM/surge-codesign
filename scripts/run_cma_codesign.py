@@ -72,7 +72,8 @@ def evaluate_population(
             srb_env,
             design_objective_calculator,
             design_config.n_control_iter,
-            headless=env.headless
+            headless=env.headless,
+            modify_priv_obs=False
         )
     
     # total_design_objective shape: (num_envs,) = (pop_size,)
@@ -98,7 +99,7 @@ if __name__ == '__main__':
         n_design_iter=50,       # Number of CMA-ES generations
         n_control_iter=100,     # Control steps per evaluation
         learning_rate=None,     # Not used for CMA-ES
-        raw_init_param_values=(6000, 0.11),
+        raw_init_param_values=(7000, 0.15, 0.1, 0.02),
     )
 
     # Setup isaacgym environment and control policy
