@@ -247,6 +247,8 @@ class HopperRobot(LeggedRobot):
     def get_spring_torque_on_knee(self):
         q_knee = -self.dof_pos[:, 1] - torch.pi / 2.0
 
+        eps = 1e-8 # avoid sqrt(0)
+
         Ks = self.design_params[:, 0]
         l0 = self.design_params[:, 1]
         l1 = self.design_params[:, 2]
@@ -265,8 +267,8 @@ class HopperRobot(LeggedRobot):
         t9 = torch.square(t8)
         t10 = - t9
         t11 = t5 + t10
-        softplus = torch.nn.functional.softplus(l0 * 1.0e+3-l3 * 1.0e+3+l6 * 1.0e+3+t3 * t4 * 1.0e+3+torch.sqrt(t11) * 1.0e+3)
-        tau = (Ks * softplus * (t6 - t3 * t4 * t8 * 1.0 / torch.sqrt(t11))) / 1.0e+3
+        softplus = torch.nn.functional.softplus(l0 * 1.0e+3-l3 * 1.0e+3+l6 * 1.0e+3+t3 * t4 * 1.0e+3+torch.sqrt(t11 + eps) * 1.0e+3)
+        tau = (Ks * softplus * (t6 - t3 * t4 * t8 * 1.0 / torch.sqrt(t11 + eps))) / 1.0e+3
 
         try:
             assert torch.isfinite(tau).all(), "NaN or inf in spring torque calculation"
