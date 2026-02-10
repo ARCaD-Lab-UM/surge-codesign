@@ -4,10 +4,13 @@ Differentiable co-design pipeline for the MUPS hopping robot.
 
 ## Installation
 
-This repo assumes Isaac Gym and legged_gym are pre-installed. Install this package locally in editable mode:
+Install this package locally in editable mode:
 ```bash
+conda env create -f environment.yml
+conda activate codesign
 pip install -e .
 ```
+This repo also requires [Isaac Gym](https://developer.nvidia.com/isaac-gym) and [arcad_gym](https://github.com/ARCaD-Lab-UM/arcad_gym) to be installed.
 
 ## Quick Start
 
