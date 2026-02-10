@@ -2,6 +2,8 @@
 
 Differentiable co-design pipeline for the MUPS hopping robot.
 
+<img src="docs/diff_codesign.png" width=800/>
+
 ## Installation
 
 Install this package locally in editable mode:
