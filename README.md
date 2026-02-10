@@ -4,36 +4,55 @@ Differentiable co-design pipeline for the MUPS hopping robot.
 
 ## Installation
 
-This repo assumes Isaac Gym and legged_gym are pre-installed. Install this package locally:
+This repo assumes Isaac Gym and legged_gym are pre-installed. Install this package locally in editable mode:
 ```bash
 pip install -e .
 ```
 
-## Quick start
+## Quick Start
 
-Run unit tests:
-
-```bash
-pytest -v -s
-```
-
-Run design optimization:
+Run unit tests to assert gradients are the same from finite difference (FD) and automatic differentiation (AD) for each CoDesign modules:
 
 ```bash
-python scripts/run_codesign.py --headless
+pytest tests/ -v -s
 ```
 
-Collect design landscape for a policy:
+Run gradient based design optimization:
+
 ```bash
-python scripts/collect_landscape.py --headless
+python scripts/run_codesign.py
 ```
 
-Plot optimization trajectory over design landscape:
+Collect design landscape for `policy_id` configured in `<mups_codesign/config.py>`:
+```bash
+python scripts/collect_landscape.py
+```
+
+Plot latest optimization trajectory over last collected objective landscape:
 ```bash
 python scripts/plot_landscape.py --policy_id rainbow_v6
 ```
 
+Collect gradient vector field of 2D objective landscape from AD:
+```bash
+python scripts/collect_gradient_field.py
+```
+
+Collect gradient vector field of 2D objective landscape from FD:
+```bash
+python scripts/collect_gradient_field_fd.py
+```
+
+Plot last collected gradient vector field over objective landscape:
+```bash
+python scripts/plot_gradient_field.py --grad-magnitude 5
+```
+Use `--grad-magnitude` to scale vector magnitude for minimum overlap.
+
+
 ### Prioritized TODOs:
+
+<details>
 
 - [x] Fix hardcoded design_param_names in mups_robot.py
 - [x] Unify changeable parameters with design space parameters
