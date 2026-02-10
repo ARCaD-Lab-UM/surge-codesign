@@ -20,10 +20,12 @@ Run unit tests to assert gradients are the same from finite difference (FD) and 
 pytest tests/ -v -s
 ```
 
-Run gradient based design optimization:
+Run design optimizations:
 
 ```bash
-python scripts/run_codesign.py
+python scripts/run_codesign.py  # Pure gradient descent
+python scripts/run_cma_codesign.py  # Pure CMA-ES
+python scripts/run_guided_es_codesign.py  # Gradient guided CMA-ES
 ```
 
 Collect design landscape for `policy_id` configured in `<mups_codesign/config.py>`:
@@ -35,6 +37,7 @@ Plot latest optimization trajectory over last collected objective landscape:
 ```bash
 python scripts/plot_landscape.py --policy_id rainbow_v6
 ```
+<img src="docs/opt_traj_overlap_landscape.png" width=500/>
 
 Collect gradient vector field of 2D objective landscape from AD:
 ```bash
@@ -51,6 +54,8 @@ Plot last collected gradient vector field over objective landscape:
 python scripts/plot_gradient_field.py --grad-magnitude 5
 ```
 Use `--grad-magnitude` to scale vector magnitude for minimum overlap.
+
+<img src="docs/gradient_field_ad.png" width=500/>
 
 
 ### Prioritized TODOs:

@@ -3,7 +3,6 @@
 *.csv
 AGENTS.md
 *.npz
-*.png
 *.npy
 *.ipynb
 .vscode/
