@@ -37,7 +37,7 @@ python scripts/collect_landscape.py
 
 Plot latest optimization trajectory over last collected objective landscape:
 ```bash
-python scripts/plot_landscape.py --policy_id rainbow_v6
+python scripts/plot_landscape.py --policy_id rainbow_v7
 ```
 <img src="docs/opt_traj_overlap_landscape.png" width=500/>
 

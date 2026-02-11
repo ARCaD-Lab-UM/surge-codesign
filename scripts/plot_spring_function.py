@@ -75,6 +75,34 @@ def plot_spring_bounds(cfg: CodesignConfig, knee_pos_limits=(-2.7, -0.4), num_po
     plt.tight_layout()
     plt.show()
 
+def plot_nominal_spring_curve(cfg: CodesignConfig, knee_pos_limits=(-2.7, -0.4), num_points=100):
+    device = torch.device(cfg.device)
+    mups_spring = MupsSpring(cfg)
+
+    knee_pos_span = torch.linspace(
+        knee_pos_limits[0],
+        knee_pos_limits[1],
+        steps=num_points,
+        device=device,
+    )
+
+    spring_torque_list = []
+    for knee_pos in knee_pos_span:
+        dof_pos = torch.tensor([[0.0, knee_pos]], device=device)
+        spring_torque = mups_spring.calc_spring_torque(dof_pos)
+        spring_torque_list.append(spring_torque[0, 1].item())
+
+    plt.figure(figsize=(5, 4), dpi=200)
+    plt.plot(knee_pos_span.cpu(), spring_torque_list, linewidth=2, color="black")
+    plt.xlabel("Knee Position (rad)")
+    plt.ylabel("Spring Torque (Nm)")
+    plt.axhline(0.0, color="black", linestyle="--")
+    plt.axvline(knee_pos_limits[0], color="black", linestyle="--")
+    plt.axvline(knee_pos_limits[1], color="black", linestyle="--")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
 
 if __name__ == "__main__":
     torch.set_printoptions(precision=4, sci_mode=False)
@@ -82,4 +110,5 @@ if __name__ == "__main__":
 
     param_names = ("ups_ks", "ups_l0", "ups_l2", "ups_l4")
     cfg = CodesignConfig(num_envs=1, device="cpu", active_param_names=param_names)
-    plot_spring_bounds(cfg)
+    # plot_spring_bounds(cfg)
+    plot_nominal_spring_curve(cfg)
