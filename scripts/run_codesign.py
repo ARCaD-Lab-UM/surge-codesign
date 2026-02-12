@@ -85,7 +85,7 @@ if __name__ == '__main__':
         params_normalized_eval = design_params_normalized.detach().cpu().numpy()
 
         # Set design parameters for each environment
-        env.set_design_params(param_values_detached[None, :]) # (1, num_params)
+        env.set_design_params({name: val for name, val in zip(param_names, param_values_detached)}) # (num_params, )
         srb_env.set_design_params(param_names, param_values.unsqueeze(0).expand(design_config.num_envs, -1)) # (num_envs, num_params)
         with torch.no_grad():
             env.reset()

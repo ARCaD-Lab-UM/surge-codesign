@@ -50,7 +50,7 @@ def evaluate_population(
     candidates_raw = candidates_tensor * design_space.active_param_scales
     
     param_names = design_space.active_param_names
-    env.set_design_params(candidates_raw)
+    env.set_design_params({name: val for name, val in zip(param_names, candidates_raw.T.detach())})  # (num_params, num_envs)
     srb_env.set_design_params(param_names, candidates_raw)
     
     with torch.no_grad():
@@ -107,7 +107,7 @@ def compute_surrogate_gradient(
     param_values_detached = design_space.detached_active_param_values
     
     # Set design params - IsaacGym uses detached, SRB uses differentiable
-    env.set_design_params(param_values_detached[None, :])
+    env.set_design_params({name: val for name, val in zip(param_names, param_values_detached.detach())})  # (num_params, )
     srb_env.set_design_params(
         param_names, 
         param_values.unsqueeze(0).expand(design_config.num_envs, -1)
@@ -167,7 +167,7 @@ def evaluate_single_point(
     param_raw_expanded = param_raw.expand(design_config.num_envs, -1)
     
     param_names = design_space.active_param_names
-    env.set_design_params(param_raw_expanded)
+    env.set_design_params({name: val for name, val in zip(param_names, param_raw.detach())})  # (num_params, )
     srb_env.set_design_params(param_names, param_raw_expanded)
     
     with torch.no_grad():

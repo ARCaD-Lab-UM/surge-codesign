@@ -187,7 +187,7 @@ class HopperRobot(LeggedRobot):
         self.root_states[:, 1] = self.env_origins[:, 1] # Reset the y position of the root states to the env origins
         self.gym.set_actor_root_state_tensor(self.sim, gymtorch.unwrap_tensor(self.root_states))
 
-    def set_design_params(self, params=None):
+    def set_design_params(self, param_dict={}):
         """
         params: (num_envs, num_params)
         """
@@ -201,19 +201,14 @@ class HopperRobot(LeggedRobot):
         l5 = 0.01  # orthogonal offset from slider
         l6 = 0.003 # parallel offset from slider
 
-        num_params = 0
-        if params is not None:
-            num_params = params.shape[1]
-            assert(num_params <= 4, f"Expected at most 4, got {num_params} parameters.")
-
         # Overwrite design parameters if provided
         self.design_params = torch.zeros(self.num_envs, 8, device=self.device)
-        self.design_params[:, 0] = ks if num_params < 1 else params[:, 0]
-        self.design_params[:, 1] = l0 if num_params < 2 else params[:, 1]
+        self.design_params[:, 0] = param_dict.get("ups_ks", ks) # (num_envs, ) or (1, )
+        self.design_params[:, 1] = param_dict.get("ups_l0", l0)
         self.design_params[:, 2] = l1
-        self.design_params[:, 3] = l2 if num_params < 3 else params[:, 2]
+        self.design_params[:, 3] = param_dict.get("ups_l2", l2)
         self.design_params[:, 4] = l3
-        self.design_params[:, 5] = l4 if num_params < 4 else params[:, 3]
+        self.design_params[:, 5] = param_dict.get("ups_l4", l4)
         self.design_params[:, 6] = l5
         self.design_params[:, 7] = l6
 

@@ -45,7 +45,7 @@ def compute_gradient_field_parallel(
     scaled_params = normalized_params * param_scales
 
     # Set design parameters for all environments in parallel
-    env.set_design_params(scaled_params.detach())  # (num_envs, 2)
+    env.set_design_params({name: val for name, val in zip(param_names, scaled_params.T.detach())})  # (2, num_envs)
     srb_env.set_design_params(param_names, scaled_params)  # keep grad
 
     with torch.no_grad():

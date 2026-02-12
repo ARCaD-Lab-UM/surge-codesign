@@ -44,7 +44,7 @@ def evaluate_objective_batch(
     param_names = design_space.active_param_names
 
     # Set design parameters for all environments
-    env.set_design_params(param_batch.detach())  # (num_envs, 2)
+    env.set_design_params({name: val for name, val in zip(param_names, param_batch.detach().T)})  # (2, num_envs)
     srb_env.set_design_params(param_names, param_batch.detach())
 
     with torch.no_grad():

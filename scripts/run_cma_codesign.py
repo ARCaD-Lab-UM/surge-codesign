@@ -58,7 +58,7 @@ def evaluate_population(
     
     # Set design parameters: each environment gets a different candidate
     param_names = design_space.active_param_names
-    env.set_design_params(candidates_raw)  # (pop_size, num_params)
+    env.set_design_params({name: val for name, val in zip(param_names, candidates_raw.T.detach())})  # (2, pop_size)
     srb_env.set_design_params(param_names, candidates_raw)  # (pop_size, num_params)
     
     with torch.no_grad():

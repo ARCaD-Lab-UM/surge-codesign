@@ -39,6 +39,7 @@ if __name__ == "__main__":
         num_envs=4096, 
         device="cuda",
         n_control_iter=100,
+        active_param_names=["ups_ks", "ups_l0"],
     )
 
     # Setup isaacgym environment and control policy
@@ -80,7 +81,7 @@ if __name__ == "__main__":
     base_params = design_space.active_param_values.detach()
     grid_param_names = design_space.active_param_names[:2]
 
-    design_param_grid = base_params.repeat(env.num_envs, 1)
+    design_param_grid = base_params.repeat(env.num_envs, 1) # (num_envs, num_params)
     design_param_grid[:, 0] = grid_points[:, 0]
     design_param_grid[:, 1] = grid_points[:, 1]
 
@@ -89,7 +90,7 @@ if __name__ == "__main__":
 
 
     # Set design parameters to the grid
-    env.set_design_params(design_param_grid[:, :2])
+    env.set_design_params({name: val for name, val in zip(grid_param_names, design_param_grid.T.detach())})  # (2, num_envs)
     srb_env.set_design_params(grid_param_names, design_param_grid[:, :2])
 
     # Rollout control to evaluate design objective
