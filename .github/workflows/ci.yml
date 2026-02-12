@@ -9,9 +9,9 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.8"]
-        os: [ubuntu-24.04]
+        os: [ubuntu-22.04]
         include:
-          - os: ubuntu-24.04
+          - os: ubuntu-22.04
             shell: bash -el {0}
             cache_path: ~/conda_pkgs_dir
 
