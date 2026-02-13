@@ -41,7 +41,6 @@ if __name__ == '__main__':
         n_design_iter=int(os.environ.get('N_DESIGN_ITER', '50')),
         n_control_iter=int(os.environ.get('N_CONTROL_ITER', '100')),
         learning_rate=None,     # Not used for CMA-ES
-        raw_init_param_values=(7000, 0.15, 0.1, 0.02),
     )
 
     # Setup isaacgym environment and control policy
