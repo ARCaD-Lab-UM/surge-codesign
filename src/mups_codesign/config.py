@@ -19,7 +19,7 @@ def default_objective_weights():
 @dataclass
 class CodesignConfig:
     # General config
-    seed: int = 0
+    seed: int = 42  # NOTE: seed=0 is treated as "no seed" by pycma (falsy check), use non-zero
     num_envs: int = 1024
     device: str = "cuda:0"      # this will be overwritten by isaacgym env.device
     dtype: str = torch.float32  # this only used internally for codesign modules
