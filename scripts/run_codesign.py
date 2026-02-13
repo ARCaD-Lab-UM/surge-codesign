@@ -1,5 +1,6 @@
 import isaacgym
 
+import os
 import pdb
 import sys
 import time
@@ -37,8 +38,8 @@ if __name__ == '__main__':
         **({'seed': seed_override} if seed_override is not None else {}),
         num_envs=10, 
         device="cuda",
-        n_design_iter=50,
-        n_control_iter=100,
+        n_design_iter=int(os.environ.get('N_DESIGN_ITER', '50')),
+        n_control_iter=int(os.environ.get('N_CONTROL_ITER', '100')),
         learning_rate=1e-2,
         raw_init_param_values=(7000, 0.15, 0.1, 0.02),
     )

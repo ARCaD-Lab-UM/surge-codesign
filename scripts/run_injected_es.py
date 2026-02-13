@@ -1,5 +1,6 @@
 import isaacgym
 
+import os
 import pdb
 import sys
 import time
@@ -28,13 +29,13 @@ torch.set_printoptions(precision=6, sci_mode=False)
 
 
 if __name__ == '__main__':
-    #* CMA-ES + Injection configuration
-    POPULATION_SIZE = 16      # Number of candidates per generation
-    SIGMA_INIT = 0.3          # Initial CMA-ES step size
+    #* CMA-ES + Injection configuration (overridable via env vars for sweep)
+    POPULATION_SIZE = int(os.environ.get('POPULATION_SIZE', '16'))
+    SIGMA_INIT = float(os.environ.get('SIGMA_INIT', '0.3'))  # Initial CMA-ES step size
     N_INJECT = 1              # Number of gradient-based solutions to inject per generation
-    GRAD_STEP_SIZE = 1e-2      # Step size multiplier for gradient injection (in sigma-normalized units)
+    GRAD_STEP_SIZE = float(os.environ.get('GRAD_STEP_SIZE', '0.01'))
     GRAD_CLIP_NORM = 1.0      # Clip surrogate gradient norm before constructing injected solution
-    USE_NATURAL_GRADIENT = True  # Use C @ grad (natural gradient in CMA coordinates) for injection
+    USE_NATURAL_GRADIENT = os.environ.get('USE_NATURAL_GRADIENT', 'true').lower() in ('true', '1')
 
     #* Initialize codesign config
     seed_override = parse_seed()
@@ -42,8 +43,8 @@ if __name__ == '__main__':
         **({'seed': seed_override} if seed_override is not None else {}),
         num_envs=POPULATION_SIZE,
         device="cuda",
-        n_design_iter=50,
-        n_control_iter=100,
+        n_design_iter=int(os.environ.get('N_DESIGN_ITER', '50')),
+        n_control_iter=int(os.environ.get('N_CONTROL_ITER', '100')),
         learning_rate=None,
         raw_init_param_values=(7000, 0.15, 0.1, 0.02),
     )

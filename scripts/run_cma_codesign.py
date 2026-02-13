@@ -1,5 +1,6 @@
 import isaacgym
 
+import os
 import pdb
 import sys
 import time
@@ -27,9 +28,9 @@ torch.set_printoptions(precision=6, sci_mode=False)
 
 
 if __name__ == '__main__':
-    #* CMA-ES specific configuration
-    POPULATION_SIZE = 16  # Number of candidates per generation = num_envs for parallel eval
-    SIGMA_INIT = 0.3      # Initial step size (in normalized space)
+    #* CMA-ES specific configuration (overridable via env vars for sweep)
+    POPULATION_SIZE = int(os.environ.get('POPULATION_SIZE', '16'))
+    SIGMA_INIT = float(os.environ.get('SIGMA_INIT', '0.3'))  # Initial step size (in normalized space)
     
     #* Initialize codesign config (num_envs = population size for parallel evaluation)
     seed_override = parse_seed()
@@ -37,8 +38,8 @@ if __name__ == '__main__':
         **({'seed': seed_override} if seed_override is not None else {}),
         num_envs=POPULATION_SIZE,
         device="cuda",
-        n_design_iter=50,       # Number of CMA-ES generations
-        n_control_iter=100,     # Control steps per evaluation
+        n_design_iter=int(os.environ.get('N_DESIGN_ITER', '50')),
+        n_control_iter=int(os.environ.get('N_CONTROL_ITER', '100')),
         learning_rate=None,     # Not used for CMA-ES
         raw_init_param_values=(7000, 0.15, 0.1, 0.02),
     )
