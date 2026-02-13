@@ -3,6 +3,7 @@ Optimization helper for control loop and design iterations
 """
 
 import pdb
+import sys
 import time
 from collections import defaultdict
 
@@ -19,6 +20,14 @@ from mups_codesign.design_space import DesignSpace
 from mups_codesign.isaac_env.hopper import HopperRobot
 from mups_codesign.isaac_env.hopper_config import HopperCfg, HopperCfgPPO
 from mups_codesign.mups_robot import MupsRobot
+
+
+def parse_seed():
+    """Extract --seed from sys.argv (isaacgym's parser also defines it)."""
+    for i, arg in enumerate(sys.argv):
+        if arg == '--seed' and i + 1 < len(sys.argv):
+            return int(sys.argv[i + 1])
+    return None  # use CodesignConfig default
 
 
 def setup_isaac_env_and_policy(design_config: CodesignConfig):

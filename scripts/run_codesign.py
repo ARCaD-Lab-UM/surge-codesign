@@ -19,7 +19,7 @@ from mups_codesign.config import CodesignConfig
 from mups_codesign.data_logger import DataLogger
 from mups_codesign.design_space import DesignSpace
 from mups_codesign.design_objective import DesignObjective
-from mups_codesign.optim_helper import rollout_control_loop, setup_isaac_env_and_policy
+from mups_codesign.optim_helper import rollout_control_loop, setup_isaac_env_and_policy, parse_seed
 from mups_codesign.vis_helper import save_ad_graph
 
 
@@ -32,7 +32,9 @@ torch.set_printoptions(precision=6, sci_mode=False)
 
 if __name__ == '__main__':
     #* Initialize codesign config
+    seed_override = parse_seed()
     design_config = CodesignConfig(
+        **({'seed': seed_override} if seed_override is not None else {}),
         num_envs=10, 
         device="cuda",
         n_design_iter=50,

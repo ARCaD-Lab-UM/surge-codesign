@@ -18,7 +18,7 @@ from mups_codesign.config import CodesignConfig
 from mups_codesign.data_logger import DataLogger
 from mups_codesign.design_space import DesignSpace
 from mups_codesign.design_objective import DesignObjective
-from mups_codesign.optim_helper import rollout_control_loop, setup_isaac_env_and_policy
+from mups_codesign.optim_helper import rollout_control_loop, setup_isaac_env_and_policy, parse_seed
 
 
 # Set print precision
@@ -93,7 +93,9 @@ if __name__ == '__main__':
     SIGMA_INIT = 0.3      # Initial step size (in normalized space)
     
     #* Initialize codesign config (num_envs = population size for parallel evaluation)
+    seed_override = parse_seed()
     design_config = CodesignConfig(
+        **({'seed': seed_override} if seed_override is not None else {}),
         num_envs=POPULATION_SIZE,
         device="cuda",
         n_design_iter=50,       # Number of CMA-ES generations
