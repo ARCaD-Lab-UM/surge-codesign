@@ -19,122 +19,12 @@ from mups_codesign.config import CodesignConfig
 from mups_codesign.data_logger import DataLogger
 from mups_codesign.design_space import DesignSpace
 from mups_codesign.design_objective import DesignObjective
-from mups_codesign.optim_helper import rollout_control_loop, setup_isaac_env_and_policy, parse_seed
+from mups_codesign.optim_helper import evaluate_population, compute_surrogate_gradient, setup_isaac_env_and_policy, parse_seed
 
 
 # Set print precision
 np.set_printoptions(precision=6, suppress=True)
 torch.set_printoptions(precision=6, sci_mode=False)
-
-
-def evaluate_population(
-    candidates_normalized: list,
-    env,
-    control_policy,
-    srb_env: MupsRobot,
-    design_objective_calculator: DesignObjective,
-    design_space: DesignSpace,
-    design_config: CodesignConfig,
-):
-    """
-    Evaluate all candidates in parallel by assigning each to a different environment.
-    Uses no_grad for pure fitness evaluation in true dynamics.
-    """
-    pop_size = len(candidates_normalized)
-
-    candidates_tensor = torch.tensor(
-        np.array(candidates_normalized),
-        dtype=design_config.dtype,
-        device=design_config.device
-    )
-    candidates_raw = candidates_tensor * design_space.active_param_scales
-
-    param_names = design_space.active_param_names
-    env.set_design_params({name: val for name, val in zip(param_names, candidates_raw.T.detach())})
-    srb_env.set_design_params(param_names, candidates_raw)
-
-    with torch.no_grad():
-        env.reset()
-        total_design_objective, objective_term_sums = rollout_control_loop(
-            env,
-            control_policy,
-            srb_env,
-            design_objective_calculator,
-            design_config.n_control_iter,
-            headless=env.headless,
-            modify_priv_obs=False
-        )
-
-    fitness_values = total_design_objective.cpu().numpy().tolist()
-    objective_terms_list = [objective_term_sums for _ in range(pop_size)]
-
-    return fitness_values, objective_terms_list, candidates_raw.cpu().numpy()
-
-
-def compute_surrogate_gradient(
-    normalized_params: np.ndarray,
-    env,
-    control_policy,
-    srb_env: MupsRobot,
-    design_objective_calculator: DesignObjective,
-    design_space: DesignSpace,
-    design_config: CodesignConfig,
-):
-    """
-    Compute gradient of the surrogate objective at a single design point.
-    Uses the differentiable surrogate dynamics pipeline.
-
-    Args:
-        normalized_params: Design parameters in normalized space, shape (num_params,)
-
-    Returns:
-        gradient: Gradient in normalized space, shape (num_params,)
-        loss_value: Scalar loss at this point
-    """
-    with torch.no_grad():
-        design_space.active_normalized_param_values.copy_(
-            torch.tensor(normalized_params, dtype=design_config.dtype, device=design_config.device)
-        )
-    design_space.project_active_params_into_bounds()
-
-    design_space.active_normalized_param_values.requires_grad_(True)
-
-    param_names = design_space.active_param_names
-    param_values = design_space.active_param_values
-    param_values_detached = design_space.detached_active_param_values
-
-    env.set_design_params({name: val for name, val in zip(param_names, param_values_detached.detach())})
-    srb_env.set_design_params(
-        param_names,
-        param_values.unsqueeze(0).expand(design_config.num_envs, -1)
-    )
-
-    with torch.no_grad():
-        env.reset()
-
-    total_design_objective, _ = rollout_control_loop(
-        env,
-        control_policy,
-        srb_env,
-        design_objective_calculator,
-        design_config.n_control_iter,
-        headless=env.headless,
-        modify_priv_obs=True
-    )
-
-    loss = total_design_objective.mean()
-    loss.backward()
-
-    gradient = None
-    if design_space.active_normalized_param_values.grad is not None:
-        gradient = design_space.active_normalized_param_values.grad.detach().cpu().numpy().copy()
-    else:
-        raise ValueError("Gradient is None from AD")
-
-    design_space.active_normalized_param_values.grad = None
-    design_space.active_normalized_param_values.requires_grad_(False)
-
-    return gradient, loss.item()
 
 
 if __name__ == '__main__':

@@ -7,6 +7,7 @@ import sys
 import time
 from collections import defaultdict
 
+import numpy as np
 import torch
 from isaacgym.torch_utils import quat_rotate_inverse
 from legged_gym.utils import get_args, task_registry
@@ -188,3 +189,134 @@ def rollout_control_loop(
                 time.sleep(time_until_next_step)
 
     return total_design_objective, objective_term_sums
+
+
+def evaluate_population(
+    candidates_normalized: list,
+    env,
+    control_policy,
+    srb_env: MupsRobot,
+    design_objective_calculator: DesignObjective,
+    design_space: DesignSpace,
+    design_config: CodesignConfig,
+):
+    """
+    Evaluate all CMA-ES candidates in parallel (one candidate per IsaacGym environment).
+    Uses no_grad for pure fitness evaluation in true (non-differentiable) dynamics.
+
+    Args:
+        candidates_normalized: List of normalized design parameters, each shape (num_params,)
+
+    Returns:
+        fitness_values: List of objective values (one per candidate)
+        objective_terms_list: List of objective term dicts (one per candidate)
+        candidates_raw: Raw (un-normalized) candidate parameters, shape (pop_size, num_params)
+    """
+    pop_size = len(candidates_normalized)
+
+    # Convert all candidates to tensor: (pop_size, num_params)
+    candidates_tensor = torch.tensor(
+        np.array(candidates_normalized),
+        dtype=design_config.dtype,
+        device=design_config.device
+    )
+    # Convert normalized -> raw values
+    candidates_raw = candidates_tensor * design_space.active_param_scales  # (pop_size, num_params)
+
+    # Set design parameters: each environment gets a different candidate
+    param_names = design_space.active_param_names
+    env.set_design_params({name: val for name, val in zip(param_names, candidates_raw.T.detach())})  # (num_params, pop_size)
+    srb_env.set_design_params(param_names, candidates_raw)  # (pop_size, num_params)
+
+    with torch.no_grad():
+        env.reset()
+        total_design_objective, objective_term_sums = rollout_control_loop(
+            env,
+            control_policy,
+            srb_env,
+            design_objective_calculator,
+            design_config.n_control_iter,
+            headless=env.headless,
+            modify_priv_obs=False
+        )
+
+    # total_design_objective shape: (num_envs,) = (pop_size,)
+    fitness_values = total_design_objective.cpu().numpy().tolist()
+    # Reuse aggregate objective terms for each candidate (per-candidate breakdown not available)
+    objective_terms_list = [objective_term_sums for _ in range(pop_size)]
+
+    return fitness_values, objective_terms_list, candidates_raw.cpu().numpy()
+
+
+def compute_surrogate_gradient(
+    normalized_params: np.ndarray,
+    env,
+    control_policy,
+    srb_env: MupsRobot,
+    design_objective_calculator: DesignObjective,
+    design_space: DesignSpace,
+    design_config: CodesignConfig,
+):
+    """
+    Compute gradient of the surrogate (SRB) objective at a single design point.
+    Uses the differentiable surrogate dynamics with state-alignment trick to
+    backpropagate through the non-differentiable IsaacGym simulator.
+
+    Args:
+        normalized_params: Design parameters in normalized space, shape (num_params,)
+
+    Returns:
+        gradient: Gradient in normalized space, shape (num_params,)
+        loss_value: Scalar surrogate loss at this point
+    """
+    # Update design_space's internal parameter (this is the leaf for autograd)
+    with torch.no_grad():
+        design_space.active_normalized_param_values.copy_(
+            torch.tensor(normalized_params, dtype=design_config.dtype, device=design_config.device)
+        )
+    design_space.project_active_params_into_bounds()  # Ensure params are within bounds
+
+    # Enable grad for the normalized parameter leaf
+    design_space.active_normalized_param_values.requires_grad_(True)
+
+    # Get param values (creates computation graph through design_space)
+    param_names = design_space.active_param_names
+    param_values = design_space.active_param_values  # (num_params,) — differentiable
+    param_values_detached = design_space.detached_active_param_values  # for IsaacGym (non-diff)
+
+    # Set design params: IsaacGym uses detached values, SRB uses differentiable values
+    env.set_design_params({name: val for name, val in zip(param_names, param_values_detached.detach())})
+    srb_env.set_design_params(
+        param_names,
+        param_values.unsqueeze(0).expand(design_config.num_envs, -1)
+    )
+
+    with torch.no_grad():
+        env.reset()
+
+    # Rollout with gradient tracking through surrogate (modify_priv_obs=True)
+    total_design_objective, _ = rollout_control_loop(
+        env,
+        control_policy,
+        srb_env,
+        design_objective_calculator,
+        design_config.n_control_iter,
+        headless=env.headless,
+        modify_priv_obs=True
+    )
+
+    # Backpropagate through surrogate dynamics
+    loss = total_design_objective.mean()
+    loss.backward()
+
+    gradient = None
+    if design_space.active_normalized_param_values.grad is not None:
+        gradient = design_space.active_normalized_param_values.grad.detach().cpu().numpy().copy()
+    else:
+        raise ValueError("Gradient is None from AD — check if computation graph is connected")
+
+    # Clean up: zero grad and disable grad tracking for next call
+    design_space.active_normalized_param_values.grad = None
+    design_space.active_normalized_param_values.requires_grad_(False)
+
+    return gradient, loss.item()

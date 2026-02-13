@@ -87,3 +87,4 @@ Use `--grad-magnitude` to scale vector magnitude for minimum overlap.
 - [x] Visualize FD gradient field over landscape
 - [x] Make rollout_control_loop easier to take different combination of params
 - [x] Start interfacing with CMA-ES
+- [x] Move `evaluate_population()` and `compute_surrogate_gradient()` to `optim_helper.py`

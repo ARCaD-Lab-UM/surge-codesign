@@ -18,73 +18,12 @@ from mups_codesign.config import CodesignConfig
 from mups_codesign.data_logger import DataLogger
 from mups_codesign.design_space import DesignSpace
 from mups_codesign.design_objective import DesignObjective
-from mups_codesign.optim_helper import rollout_control_loop, setup_isaac_env_and_policy, parse_seed
+from mups_codesign.optim_helper import evaluate_population, setup_isaac_env_and_policy, parse_seed
 
 
 # Set print precision
 np.set_printoptions(precision=6, suppress=True)
 torch.set_printoptions(precision=6, sci_mode=False)
-
-
-def evaluate_population(
-    candidates_normalized: list,
-    env,
-    control_policy,
-    srb_env: MupsRobot,
-    design_objective_calculator: DesignObjective,
-    design_space: DesignSpace,
-    design_config: CodesignConfig,
-):
-    """
-    Evaluate all candidates in parallel by assigning each to a different environment.
-    
-    Args:
-        candidates_normalized: List of normalized design parameters, each shape (num_params,)
-        
-    Returns:
-        fitness_values: List of objective values (one per candidate)
-        objective_terms_list: List of objective term dicts (one per candidate)
-    """
-    pop_size = len(candidates_normalized)
-    
-    # Convert all candidates to tensor: (pop_size, num_params)
-    candidates_tensor = torch.tensor(
-        np.array(candidates_normalized),
-        dtype=design_config.dtype,
-        device=design_config.device
-    )
-    # Convert to raw values
-    candidates_raw = candidates_tensor * design_space.active_param_scales  # (pop_size, num_params)
-    
-    # Set design parameters: each environment gets a different candidate
-    param_names = design_space.active_param_names
-    env.set_design_params({name: val for name, val in zip(param_names, candidates_raw.T.detach())})  # (2, pop_size)
-    srb_env.set_design_params(param_names, candidates_raw)  # (pop_size, num_params)
-    
-    with torch.no_grad():
-        env.reset()
-    
-    # Run control loop without gradients - all envs run in parallel
-    with torch.no_grad():
-        total_design_objective, objective_term_sums = rollout_control_loop(
-            env,
-            control_policy,
-            srb_env,
-            design_objective_calculator,
-            design_config.n_control_iter,
-            headless=env.headless,
-            modify_priv_obs=False
-        )
-    
-    # total_design_objective shape: (num_envs,) = (pop_size,)
-    fitness_values = total_design_objective.cpu().numpy().tolist()
-    
-    # objective_term_sums contains averaged values across all envs,
-    # but we need per-candidate terms for logging the best one
-    # For simplicity, we'll use the same aggregate terms for all candidates
-    objective_terms_list = [objective_term_sums for _ in range(pop_size)]
-    
-    return fitness_values, objective_terms_list, candidates_raw.cpu().numpy()
 
 
 if __name__ == '__main__':
