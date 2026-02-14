@@ -31,11 +31,10 @@ torch.set_printoptions(precision=6, sci_mode=False)
 if __name__ == '__main__':
     #* CMA-ES + Injection configuration (overridable via env vars for sweep)
     POPULATION_SIZE = int(os.environ.get('POPULATION_SIZE', '16'))
-    SIGMA_INIT = float(os.environ.get('SIGMA_INIT', '0.3'))  # Initial CMA-ES step size
+    SIGMA_INIT = float(os.environ.get('SIGMA_INIT', '0.2'))  # Initial CMA-ES step size
     N_INJECT = 1              # Number of gradient-based solutions to inject per generation
-    GRAD_STEP_SIZE = float(os.environ.get('GRAD_STEP_SIZE', '0.01'))
+    GRAD_STEP_SIZE = float(os.environ.get('GRAD_STEP_SIZE', '0.1'))
     GRAD_CLIP_NORM = 1.0      # Clip surrogate gradient norm before constructing injected solution
-    USE_NATURAL_GRADIENT = os.environ.get('USE_NATURAL_GRADIENT', 'true').lower() in ('true', '1')
 
     #* Initialize codesign config
     seed_override = parse_seed()
@@ -56,7 +55,7 @@ if __name__ == '__main__':
     n_params = len(design_config.active_param_names)
     print(f"CMA-ES + Injection (Hansen 2011) - Generations: {N_DESIGN_ITER}, Control Iterations: {N_CONTROL_ITER}")
     print(f"Population Size: {POPULATION_SIZE}, Initial Sigma: {SIGMA_INIT}")
-    print(f"Injection: {N_INJECT} solution(s)/gen, step_size={GRAD_STEP_SIZE}, natural_grad={USE_NATURAL_GRADIENT}")
+    print(f"Injection: {N_INJECT} solution(s)/gen, step_size={GRAD_STEP_SIZE}")
     print(f"Gradient Clip Norm: {GRAD_CLIP_NORM}")
     print(f"Initial Design Parameters: {design_config.raw_init_param_values}")
 
@@ -99,7 +98,6 @@ if __name__ == '__main__':
             "n_inject": N_INJECT,
             "grad_step_size": GRAD_STEP_SIZE,
             "grad_clip_norm": GRAD_CLIP_NORM,
-            "use_natural_gradient": USE_NATURAL_GRADIENT,
             "bounds_normalized": bounds_normalized.tolist(),
         },
     })
@@ -108,10 +106,21 @@ if __name__ == '__main__':
     best_params = None
     generation = 0
 
+    # Cosine step-size decay: GRAD_STEP_SIZE -> 0 at DECAY_END_FRAC of total iterations
+    DECAY_END_FRAC = float(os.environ.get('DECAY_END_FRAC', '0.5'))
+    DECAY_END = int(DECAY_END_FRAC * N_DESIGN_ITER)
+    def cosine_step_size(gen):
+        if gen >= DECAY_END:
+            return 0.0
+        return GRAD_STEP_SIZE * 0.5 * (1.0 + np.cos(np.pi * gen / DECAY_END))
+
     pbar = tqdm(total=N_DESIGN_ITER, desc="CMA-Inject Generation", ncols=80, file=sys.stdout)
 
     while not es.stop():
         iter_start = time.time()
+
+        # Effective step size with cosine decay
+        effective_step = cosine_step_size(generation)
 
         #* Step 1: Compute surrogate gradient at current CMA-ES mean
         current_mean = es.mean.copy()
@@ -134,26 +143,16 @@ if __name__ == '__main__':
         #* Step 2: Compute and inject gradient-based solution to CMA-ES
         # Hansen 2011: inject x_inj = mean - step * direction
         # Direction can be raw gradient or natural gradient (C @ grad)
-        if USE_NATURAL_GRADIENT:
-            # Use CMA-ES covariance to transform gradient into natural coordinates
-            # This respects the learned landscape geometry: C @ grad
-            C = es.sm.covariance_matrix  # (n, n)
-            grad_direction = C @ surrogate_grad
-        else:
-            grad_direction = surrogate_grad
+        grad_direction = es.C @ surrogate_grad # (num_params, )
 
         # Normalize direction and scale by sigma * sqrt(n), matching CMA-ES internal step scale
-        dir_norm = np.linalg.norm(grad_direction)
-        if dir_norm > 1e-12:
-            # Construct injected solution: step along negative gradient direction
-            # Scale so the step magnitude is comparable to CMA-ES's typical step length
-            injection_solution = current_mean - GRAD_STEP_SIZE * es.sigma * np.sqrt(n_params) * (grad_direction / dir_norm)
-            # Clip to bounds before injection (pycma also handles internal clipping)
-            injection_solution = np.clip(injection_solution, lower_bounds, upper_bounds)
-            es.inject([injection_solution])
-        else:
-            # Gradient is essentially zero; skip injection this generation
-            injection_solution = None
+
+        # Construct injected solution: step along negative gradient direction
+        # Scale so the step magnitude is comparable to CMA-ES's typical step length
+        injection_solution = current_mean - effective_step * es.sigma * np.sqrt(n_params) * grad_direction / np.sqrt(surrogate_grad @ grad_direction)
+        # Clip to bounds before injection (pycma also handles internal clipping)
+        injection_solution = np.clip(injection_solution, lower_bounds, upper_bounds)
+        es.inject([injection_solution])
 
         candidates_normalized = es.ask()
 
@@ -190,7 +189,7 @@ if __name__ == '__main__':
         print(f"  Surrogate Loss at Mean: {surrogate_loss:.4f}")
         print(f"  Gen Best Params (raw): {gen_best_raw}")
         print(f"  Gradient Norm (before/after clip): {grad_norm:.4f} / {grad_norm_clipped:.4f}")
-        print(f"  Injection: {'active' if injection_solution is not None else 'skipped (zero grad)'}")
+        print(f"  Injection: {'active' if injection_solution is not None else 'skipped (zero grad)'}, eff_step={effective_step:.4f}")
         print(f"  CMA-ES Sigma: {es.sigma:.6f}")
         term_summary = ", ".join(f"{name}: {val:.4f}" for name, val in gen_best_objective_terms.items())
         print(f"  Objective Components -> {term_summary}")
@@ -217,8 +216,9 @@ if __name__ == '__main__':
                 "surrogate_loss": surrogate_loss,
                 "grad_norm_clipped": float(grad_norm_clipped),
                 "injection_active": injection_solution is not None,
-                "use_natural_gradient": USE_NATURAL_GRADIENT,
                 "grad_step_size": GRAD_STEP_SIZE,
+                "effective_step_size": effective_step,
+                "decay_end_frac": DECAY_END_FRAC,
             },
         )
 

@@ -31,10 +31,9 @@ torch.set_printoptions(precision=6, sci_mode=False)
 if __name__ == '__main__':
     #* Mean-Shift Baseline configuration (overridable via env vars for sweep)
     POPULATION_SIZE = int(os.environ.get('POPULATION_SIZE', '16'))
-    SIGMA_INIT = 0.3          # Initial CMA-ES step size
-    GRAD_STEP_SIZE = float(os.environ.get('GRAD_STEP_SIZE', '0.01'))
+    SIGMA_INIT = float(os.environ.get('SIGMA_INIT', '0.2'))  # Initial CMA-ES step size
+    GRAD_STEP_SIZE = float(os.environ.get('GRAD_STEP_SIZE', '0.1'))
     GRAD_CLIP_NORM = 1.0      # Clip surrogate gradient norm before mean shift
-    USE_NATURAL_GRADIENT = os.environ.get('USE_NATURAL_GRADIENT', 'true').lower() in ('true', '1')
 
     #* Initialize codesign config
     seed_override = parse_seed()
@@ -105,10 +104,21 @@ if __name__ == '__main__':
     best_params = None
     generation = 0
 
+    # Cosine step-size decay: GRAD_STEP_SIZE -> 0 at DECAY_END_FRAC of total iterations
+    DECAY_END_FRAC = float(os.environ.get('DECAY_END_FRAC', '0.5'))
+    DECAY_END = int(DECAY_END_FRAC * N_DESIGN_ITER)
+    def cosine_step_size(gen):
+        if gen >= DECAY_END:
+            return 0.0
+        return GRAD_STEP_SIZE * 0.5 * (1.0 + np.cos(np.pi * gen / DECAY_END))
+
     pbar = tqdm(total=N_DESIGN_ITER, desc="MeanShift Generation", ncols=80, file=sys.stdout)
 
     while not es.stop():
         iter_start = time.time()
+
+        # Effective step size with cosine decay
+        effective_step = cosine_step_size(generation)
 
         #* Step 1: Compute surrogate gradient at current CMA-ES mean
         current_mean = es.mean.copy()
@@ -130,24 +140,13 @@ if __name__ == '__main__':
 
         #* Step 2: Inject gradient via direct mean shift
         # Construct injection candidate along negative (surrogate) gradient direction
-        if USE_NATURAL_GRADIENT:
-            # Natural gradient: C @ grad respects learned landscape geometry
-            C = es.sm.covariance_matrix  # (n, n)
-            grad_direction = C @ surrogate_grad
-        else:
-            grad_direction = surrogate_grad
+        grad_direction = es.C @ surrogate_grad # (num_params, )
 
-        dir_norm = np.linalg.norm(grad_direction)
-        if dir_norm > 1e-12:
-            # Scale step to match CMA-ES typical step length: sigma * sqrt(n)
-            new_mean = current_mean - GRAD_STEP_SIZE * es.sigma * np.sqrt(n_params) * (grad_direction / dir_norm)
-            new_mean = np.clip(new_mean, lower_bounds, upper_bounds)
-            mean_shift_norm = np.linalg.norm(new_mean - current_mean)
-            es.mean = new_mean
-            mean_shift_applied = True
-        else:
-            mean_shift_norm = 0.0
-            mean_shift_applied = False
+        # Scale step to match CMA-ES typical step length: sigma * sqrt(n)
+        new_mean = current_mean - effective_step * es.sigma * np.sqrt(n_params) * grad_direction / np.sqrt(surrogate_grad @ grad_direction)
+        new_mean = np.clip(new_mean, lower_bounds, upper_bounds)
+        mean_shift_norm = np.linalg.norm(new_mean - current_mean)
+        es.mean = new_mean
 
         #* Step 3: Sample candidates from CMA-ES (around shifted mean)
         candidates_normalized = es.ask()
@@ -185,7 +184,7 @@ if __name__ == '__main__':
         print(f"  Surrogate Loss at Mean: {surrogate_loss:.4f}")
         print(f"  Gen Best Params (raw): {gen_best_raw}")
         print(f"  Gradient Norm (before/after clip): {grad_norm:.4f} / {grad_norm_clipped:.4f}")
-        print(f"  Mean Shift: {'applied (norm={:.6f})'.format(mean_shift_norm) if mean_shift_applied else 'skipped (zero grad)'}")
+        print(f"  Mean Shift: {'applied (norm={:.6f})'.format(mean_shift_norm)}, eff_step={effective_step:.4f}")
         print(f"  CMA-ES Sigma: {es.sigma:.6f}")
         term_summary = ", ".join(f"{name}: {val:.4f}" for name, val in gen_best_objective_terms.items())
         print(f"  Objective Components -> {term_summary}")
@@ -211,9 +210,10 @@ if __name__ == '__main__':
                 "std_fitness": np.std(fitness_values),
                 "surrogate_loss": surrogate_loss,
                 "grad_norm_clipped": float(grad_norm_clipped),
-                "mean_shift_applied": mean_shift_applied,
                 "mean_shift_norm": float(mean_shift_norm),
                 "grad_step_size": GRAD_STEP_SIZE,
+                "effective_step_size": effective_step,
+                "decay_end_frac": DECAY_END_FRAC,
             },
         )
 
