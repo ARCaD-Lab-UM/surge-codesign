@@ -40,7 +40,7 @@ if __name__ == '__main__':
         device="cuda",
         n_design_iter=int(os.environ.get('N_DESIGN_ITER', '50')),
         n_control_iter=int(os.environ.get('N_CONTROL_ITER', '100')),
-        learning_rate=1e-2,
+        learning_rate=float(os.environ.get('LEARNING_RATE', '1e-2')),
     )
 
     # Setup isaacgym environment and control policy
