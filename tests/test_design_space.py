@@ -7,6 +7,7 @@ from mups_codesign.design_space import DesignSpace
 def _make_config(active_param_names=("ups_ks", "ups_l0")):
     return CodesignConfig(
         active_param_names=active_param_names,
+        raw_init_param_values=None, # use default values
         device="cpu",
         dtype=torch.float32,
     )

@@ -9,7 +9,7 @@ from mups_codesign.design_objective import DesignObjective
 def test_calc_objective_requires_grad(use_log1p):
     torch.manual_seed(0)
 
-    cfg = CodesignConfig(num_envs=4, device="cpu", dtype=torch.float32, use_log1p=use_log1p)
+    cfg = CodesignConfig(num_envs=4, device="cpu", dtype=torch.float32, raw_init_param_values=None, use_log1p=use_log1p)
     obj = DesignObjective(cfg)
 
     srb_state = torch.randn((cfg.num_envs, 13), device=cfg.device, dtype=cfg.dtype, requires_grad=True)

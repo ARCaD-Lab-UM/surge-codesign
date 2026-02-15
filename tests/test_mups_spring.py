@@ -9,7 +9,7 @@ from mups_codesign.mups_spring import MupsSpring
 def test_spring_torque_requires_grad():
     torch.manual_seed(0)
 
-    cfg = CodesignConfig(num_envs=1, device="cpu", dtype=torch.float32, active_param_names=("ups_ks", "ups_l0"))
+    cfg = CodesignConfig(num_envs=1, device="cpu", dtype=torch.float32, active_param_names=("ups_ks", "ups_l0"), raw_init_param_values=None)
     mups_spring = MupsSpring(cfg)
     design_space = DesignSpace(cfg)
     active_param_names = design_space.active_param_names
@@ -29,7 +29,7 @@ def test_spring_torque_autograd_matches_finite_diff(seed):
     """Verify autograd gradients match finite difference gradients within threshold."""
     torch.manual_seed(seed)
 
-    cfg = CodesignConfig(num_envs=1, device="cpu", dtype=torch.float64, active_param_names=("ups_ks", "ups_l0"))
+    cfg = CodesignConfig(num_envs=1, device="cpu", dtype=torch.float64, active_param_names=("ups_ks", "ups_l0"), raw_init_param_values=None)
     design_space = DesignSpace(cfg)
     active_param_names = design_space.active_param_names
     num_params = len(active_param_names)

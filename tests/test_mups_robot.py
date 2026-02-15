@@ -36,6 +36,7 @@ def test_srb_gradient_matches_fd(seed, num_steps):
         device="cpu",
         dtype=torch.float64,
         active_param_names=("ups_ks", "ups_l0"),
+        raw_init_param_values=None,
         objective_weights=objective_weights,
     )
 

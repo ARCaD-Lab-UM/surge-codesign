@@ -55,6 +55,7 @@ def compute_policy_gradients(seed, num_steps):
         device="cpu",
         dtype=torch.float64,
         active_param_names=("ups_ks", "ups_l0", "ups_l2", "ups_l4"),
+        raw_init_param_values=None,
     )
 
     # Dimensions matching hopper config structure
