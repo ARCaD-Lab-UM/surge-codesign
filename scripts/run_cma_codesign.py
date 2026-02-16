@@ -30,7 +30,7 @@ torch.set_printoptions(precision=6, sci_mode=False)
 if __name__ == '__main__':
     #* CMA-ES specific configuration (overridable via env vars for sweep)
     POPULATION_SIZE = int(os.environ.get('POPULATION_SIZE', '16'))
-    SIGMA_INIT = float(os.environ.get('SIGMA_INIT', '0.3'))  # Initial step size (in normalized space)
+    SIGMA_INIT = float(os.environ.get('SIGMA_INIT', '0.2'))  # Initial step size (in normalized space)
     
     #* Initialize codesign config (num_envs = population size for parallel evaluation)
     seed_override = parse_seed()

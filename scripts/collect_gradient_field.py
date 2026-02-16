@@ -90,6 +90,7 @@ if __name__ == "__main__":
         n_design_iter=1,
         n_control_iter=100,
         active_param_names=("ups_ks", "ups_l0"),
+        raw_init_param_values=None,
         objective_weights=objective_weights,
     )
 

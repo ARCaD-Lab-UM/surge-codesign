@@ -106,7 +106,7 @@ if __name__ == '__main__':
 
     # Cosine step-size decay: GRAD_STEP_SIZE -> 0 at DECAY_END_FRAC of total iterations
     NO_COSINE_DECAY = os.environ.get('NO_COSINE_DECAY', '0') == '1'
-    DECAY_END_FRAC = float(os.environ.get('DECAY_END_FRAC', '0.5'))
+    DECAY_END_FRAC = float(os.environ.get('DECAY_END_FRAC', '1'))
     DECAY_END = int(DECAY_END_FRAC * N_DESIGN_ITER)
     def cosine_step_size(gen):
         if NO_COSINE_DECAY:
