@@ -100,7 +100,8 @@ if __name__ == '__main__':
     generation = 0
 
     # CMA-ES optimization loop
-    pbar = tqdm(total=N_DESIGN_ITER, desc="CMA-ES Generation", ncols=80, file=sys.stdout)
+    pbar = tqdm(total=N_DESIGN_ITER, desc="CMA-ES Generation", ncols=80, file=sys.stdout,
+                bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_inv_fmt}]")
     
     while not es.stop():
         iter_start = time.time()

@@ -115,7 +115,8 @@ if __name__ == '__main__':
             return 0.0
         return GRAD_STEP_SIZE * 0.5 * (1.0 + np.cos(np.pi * gen / DECAY_END))
 
-    pbar = tqdm(total=N_DESIGN_ITER, desc="MeanShift Generation", ncols=80, file=sys.stdout)
+    pbar = tqdm(total=N_DESIGN_ITER, desc="MeanShift Generation", ncols=80, file=sys.stdout, 
+                bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_inv_fmt}]")
 
     while not es.stop():
         iter_start = time.time()
