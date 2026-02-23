@@ -48,6 +48,7 @@ class CodesignConfig:
     objective_weights: Dict[str, float] = field(
         default_factory=default_objective_weights
     )
+    hw_height_offset: float = 0.0  # Height offset to account for IMU position in hardware (added to desired height)
 
     # Logging config
     log_dir: str = "logs/"

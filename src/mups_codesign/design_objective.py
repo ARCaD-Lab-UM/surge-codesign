@@ -18,7 +18,7 @@ class DesignObjective:
         self.motor_torque_constant = 0.945
 
         # Task related parameters
-        self.desired_base_height = 0.5
+        self.desired_base_height = 0.5 + config.hw_height_offset # IMU offset
 
         # Multi-objective weights
         self.objective_weights = config.objective_weights
