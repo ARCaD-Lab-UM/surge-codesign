@@ -8,6 +8,8 @@ AGENTS.md
 .vscode/
 logs/
 debug_*.py
+evaluation/
+final_results/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

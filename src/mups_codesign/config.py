@@ -19,7 +19,7 @@ def default_objective_weights():
 @dataclass
 class CodesignConfig:
     # General config
-    seed: int = 42  # NOTE: seed=0 is treated as "no seed" by pycma (falsy check), use non-zero
+    seed: int = 12  # NOTE: seed=0 is treated as "no seed" by pycma (falsy check), use non-zero
     num_envs: int = 1024
     device: str = "cuda:0"      # this will be overwritten by isaacgym env.device
     dtype: str = torch.float32  # this only used internally for codesign modules
@@ -36,7 +36,13 @@ class CodesignConfig:
 
     # Design space config
     active_param_names: tuple = ("ups_ks", "ups_l0", "ups_l2", "ups_l4") # if None, use all parameters in design space
-    raw_init_param_values: tuple = (8000, 0.11, 0.13, 0.02)  # if None, use default param values
+    # raw_init_param_values: tuple = (4115, 0.138, 0.1, 0.02)  # if None, use default param values
+    # raw_init_param_values: tuple = (8000, 0.11, 0.13, 0.02)  # if None, use default param values
+
+    # 2D Sweep config
+    # active_param_names: tuple = ("ups_ks", "ups_l0")
+    # raw_init_param_values: tuple = (2000, 0.1)
+    raw_init_param_values: tuple = None#(8000, 0.1)
 
     # MUPS spring config
     softplus_beta: float = 1.0
