@@ -6,13 +6,21 @@ Differentiable co-design pipeline for the MUPS hopping robot.
 
 ## Installation
 
-Install this package locally in editable mode:
+This repo is self-contained: the locomotion-policy training stack (`legged_gym`, `rsl_rl`) is
+vendored under `src/` and installed alongside the codesign package. The only external
+dependency is [Isaac Gym](https://developer.nvidia.com/isaac-gym), which must be installed
+manually (it is not available on PyPI).
+
 ```bash
 conda env create -f environment.yml
 conda activate codesign
+# Install Isaac Gym (Preview 4) into this env per NVIDIA's instructions, then:
 pip install -e .
 ```
-This repo also requires [Isaac Gym](https://developer.nvidia.com/isaac-gym) and [arcad_gym](https://github.com/ARCaD-Lab-UM/arcad_gym) to be installed.
+
+A single `pip install -e .` installs three packages — `mups_codesign` (the design optimizer),
+and the vendored `legged_gym` and `rsl_rl` (policy training). A pretrained policy ships in
+`checkpoints/rainbow_v7/`, so the codesign scripts run out of the box.
 
 ## Quick Start
 
@@ -22,12 +30,13 @@ Run unit tests to assert gradients are the same from finite difference (FD) and 
 pytest tests/ -v -s
 ```
 
-Run design optimizations:
+Run design optimizations (the pretrained `checkpoints/rainbow_v7` policy is loaded automatically):
 
 ```bash
-python scripts/run_codesign.py  # Pure gradient descent
-python scripts/run_cma_codesign.py  # Pure CMA-ES
-python scripts/run_guided_es_codesign.py  # Gradient guided CMA-ES
+python scripts/run_codesign.py       # Pure gradient descent
+python scripts/run_cma_codesign.py   # Pure CMA-ES
+python scripts/run_injected_es.py    # CMA-ES with gradient-injected candidates
+python scripts/run_meanshift_es.py   # CMA-ES with gradient mean-shift
 ```
 
 Collect design landscape for `policy_id` configured in `<mups_codesign/config.py>`:
@@ -59,8 +68,23 @@ Use `--grad-magnitude` to scale vector magnitude for minimum overlap.
 
 <img src="docs/gradient_field_ad.png" width=500/>
 
+## Train a Locomotion Policy
 
-### Prioritized TODOs:
+A pretrained policy (`rainbow_v7`) ships in `checkpoints/`, so this step is optional. To train
+your own, use the vendored `legged_gym`:
+
+```bash
+python src/legged_gym/scripts/train.py --task hopper          # runs saved to logs/hopper/
+python src/legged_gym/scripts/play.py --task hopper           # visualize the latest run
+```
+
+Training runs are written to `logs/hopper/<timestamp>_<run_name>/`. The codesign config loads
+its policy from `<policy_root>/<policy_id>/` (defaults: `policy_root="checkpoints"`,
+`policy_id="rainbow_v7"`). To use a freshly trained policy, set `policy_root="logs/hopper"` and
+`policy_id` to the new run directory name in `src/mups_codesign/config.py`.
+
+
+### Development Logs
 
 <details>
 
@@ -90,3 +114,6 @@ Use `--grad-magnitude` to scale vector magnitude for minimum overlap.
 - [x] Move `evaluate_population()` and `compute_surrogate_gradient()` to `optim_helper.py`
 - [x] Fix injected step calculation
 - [x] Run experiments with different injection number
+- [x] Create a submodule for hopper policy training, prepare for open-source release
+
+</details>

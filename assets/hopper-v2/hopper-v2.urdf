@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="leg_foot">
+
+  <link
+    name="Torso">
+    <inertial>
+      <origin
+        xyz="-3.47977543608903E-05 0.0 0.0123233505852236"
+        rpy="0 0 0" />
+      <mass
+        value="0.691606304075024" />
+
+      <!-- Hopper V1 Numbers -->
+      <!-- <inertia
+        ixx="0.001"
+        iyy="0.04"
+        izz="0.04"
+        ixy="0"
+        ixz="0"
+        iyz="0" 
+        /> -->
+
+      <!-- Original Inertia Values -->
+      <inertia
+        ixx="0.000386049953446763"
+        iyy="0.00516450436448171"
+        izz="0.00483980418811997"
+        ixy="0"
+        ixz="0"
+        iyz="0" 
+        />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="meshes/Torso.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0.0025 0.0600"
+        rpy="0 0 0" />
+      <geometry>
+        <box size="0.650 0.02 0.015" />
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="Front_Weight">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.252" />
+      <inertia 
+        ixx="0.00013" 
+        iyy="0.00013" 
+        izz="0.000255" 
+        ixy="0" 
+        ixz="0" 
+        iyz="0" 
+        />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.04" length="0.02" />
+      </geometry>
+      <material name="weights_material">
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.04" length="0.02" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="Front_Weight_joint" type="fixed">
+    <parent link="Torso" />
+    <child link="Front_Weight" />
+    <origin xyz="0.3 0 0.08" rpy="0 0 0" />
+  </joint>
+
+  <link name="Back_Weight">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.252" />
+      <inertia 
+        ixx="0.00013" 
+        iyy="0.00013" 
+        izz="0.000255" 
+        ixy="0" 
+        ixz="0" 
+        iyz="0" 
+        />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.04" length="0.02" />
+      </geometry>
+      <material name="weights_material" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.04" length="0.02" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="Back_Weight_joint" type="fixed">
+    <parent link="Torso" />
+    <child link="Back_Weight" />
+    <origin xyz="-0.3 0 0.08" rpy="0 0 0" />
+  </joint>
+
+  <link
+    name="Thigh">
+    <inertial>
+      <origin
+        xyz="-0.00266508662940908 0.0 -0.0184404554474768"
+        rpy="0 0 0" />
+      <mass
+        value="0.680521373875353" />
+      <inertia
+        ixx="0.00121567934619546"
+        iyy="0.0015642418763912"
+        izz="0.000404763200727095"
+        ixy="0"
+        ixz="0"
+        iyz="0"  
+        />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="meshes/Thigh.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.776470588235294 0.756862745098039 0.737254901960784 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="-.017 0 -.085"
+        rpy="0 0 0" />
+      <geometry>
+        <box
+          size=".06 .03 .18" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Hip"
+    type="revolute">
+    <origin
+      xyz="0 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="Torso" />
+    <child
+      link="Thigh" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-0.60"
+      upper="1.57"
+      effort="35"
+      velocity="30" />
+  </joint>
+  <link
+    name="Shank">
+    <inertial>
+      <origin
+        xyz="0.00917157947139449 0.0 -0.104282712433589"
+        rpy="0 0 0" />
+      <mass
+        value="0.0613493769638906" />
+      <inertia
+        ixx="0.000162590011682181"
+        iyy="0.000166902322129974"
+        izz="8.47092575333008E-06"
+        ixy="0"
+        ixz="0"
+        iyz="0"  
+        />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="meshes/Shank.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0.01 0 -.11"
+        rpy="0 -.13 0" />
+      <geometry>
+        <box
+          size=".02 .01 .17" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Knee"
+    type="revolute">
+    <origin
+      xyz="0 0 -0.22"
+      rpy="0 0 0" />
+    <parent
+      link="Thigh" />
+    <child
+      link="Shank" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-2.6"
+      upper="-1.3"
+      effort="35"
+      velocity="30" />
+  </joint>
+  <link
+    name="Foot">
+    <inertial>
+      <origin
+        xyz="-0.000157588246564852 0.0 -0.000893727131991484"
+        rpy="0 0 0" />
+      <mass
+        value="0.0122961553899727" />
+      <inertia
+        ixx="2.77121697559683E-06"
+        iyy="2.76528540592917E-06"
+        izz="2.95606497817254E-06"
+        ixy="0"
+        ixz="0"
+        iyz="0" 
+        />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <sphere
+          radius=".02" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <!-- <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <sphere
+          radius=".02" />
+      </geometry>
+    </collision> -->
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="1.5708 0 0" />
+      <geometry>
+        <cylinder radius="0.02" length="0.2" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Foot"
+    type="fixed">
+    <origin
+      xyz="0.019174 0 -0.21916"
+      rpy="0 0 0" />
+    <parent
+      link="Shank" />
+    <child
+      link="Foot" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+</robot>

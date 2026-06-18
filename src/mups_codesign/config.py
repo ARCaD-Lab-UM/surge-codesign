@@ -25,9 +25,11 @@ class CodesignConfig:
     dtype: str = torch.float32  # this only used internally for codesign modules
 
     # RL policy config
-    # policy_id = "rainbow_v5"  # trained with ks and l0
-    # policy_id = "rainbow_v6"    # trained with ks, l0, l2, l4
-    policy_id = "rainbow_v7"    # trained with ks, l0, l2, l4 and all in privileged obs
+    policy_id: str = "rainbow_v7"    # trained with ks, l0, l2, l4 and all in privileged obs
+    # Directory holding policy runs (<policy_root>/<policy_id>/model_*.pt), resolved relative to
+    # the repo root. The shipped pretrained policy lives in checkpoints/rainbow_v7/. To load a
+    # freshly trained policy, set policy_root="logs/hopper" and policy_id to the run dir name.
+    policy_root: str = "checkpoints"
 
     # Optimizer config
     learning_rate: float = None

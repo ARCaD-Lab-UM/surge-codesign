@@ -2,6 +2,7 @@
 Optimization helper for control loop and design iterations
 """
 
+import os
 import pdb
 import sys
 import time
@@ -10,6 +11,8 @@ from collections import defaultdict
 import numpy as np
 import torch
 from isaacgym.torch_utils import quat_rotate_inverse
+from legged_gym import LEGGED_GYM_ROOT_DIR
+from legged_gym.envs import HopperRobot
 from legged_gym.utils import get_args, task_registry
 from legged_gym.utils.task_registry import TaskRegistry
 from torch import nn
@@ -18,8 +21,6 @@ from mups_codesign.config import CodesignConfig
 from mups_codesign.data_logger import DataLogger
 from mups_codesign.design_objective import DesignObjective
 from mups_codesign.design_space import DesignSpace
-from mups_codesign.isaac_env.hopper import HopperRobot
-from mups_codesign.isaac_env.hopper_config import HopperCfg, HopperCfgPPO
 from mups_codesign.mups_robot import MupsRobot
 
 
@@ -37,12 +38,6 @@ def setup_isaac_env_and_policy(design_config: CodesignConfig):
     args.task = "hopper"
     args.headless = True
     args.load_run = design_config.policy_id
-    task_registry.register(
-        "hopper",
-        HopperRobot,
-        HopperCfg(),
-        HopperCfgPPO()
-    )
 
     # Fetch config for env and policy
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
@@ -64,6 +59,7 @@ def setup_isaac_env_and_policy(design_config: CodesignConfig):
     env_cfg.domain_rand.randomize_base_mass = False
     env_cfg.domain_rand.randomize_center_of_mass = False
     env_cfg.domain_rand.randomize_kp_kd = False
+    env_cfg.domain_rand.randomize_design = False  # codesign sets designs explicitly
 
     # Override train_cfg to load pre-trained policy
     train_cfg.runner.resume = True
@@ -71,8 +67,14 @@ def setup_isaac_env_and_policy(design_config: CodesignConfig):
     # Make isaacgym environment
     env, _ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
 
-    # Load control policy in inference mode
-    ppo_runner, _ = task_registry.make_alg_runner(env=env, name=args.task, args=args, train_cfg=train_cfg)
+    # Load control policy in inference mode from the shipped checkpoints directory
+    # (<policy_root>/<policy_id>/model_*.pt), resolved relative to the repo root.
+    policy_log_root = design_config.policy_root
+    if not os.path.isabs(policy_log_root):
+        policy_log_root = os.path.join(LEGGED_GYM_ROOT_DIR, policy_log_root)
+    ppo_runner, _ = task_registry.make_alg_runner(
+        env=env, name=args.task, args=args, train_cfg=train_cfg, log_root=policy_log_root
+    )
     control_policy = ppo_runner.get_inference_policy(device=env.device)
 
     # Freeze policy parameters
