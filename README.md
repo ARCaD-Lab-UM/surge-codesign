@@ -1,15 +1,15 @@
-# Differential CoDesign
-
-Differentiable co-design pipeline for the MUPS hopping robot.
+# SurGE: Surrogate Gradient-guided Evolution for Co-design of Legged Robots with Parallel Elasticity
 
 <img src="docs/diff_codesign.png" width=800/>
 
-## Installation
+## TODO
+- [ ] Update readme to a paper-code-release style, i.e. more info about the paper
+- [ ] Add more figures from the paper
+- [ ] Add bibtex citation
+- [ ] Unify naming of the robot, existing names: `hopper`, `mups_robot`, `hopper_v2` ...
 
-This repo is self-contained: the locomotion-policy training stack (`legged_gym`, `rsl_rl`) is
-vendored under `src/` and installed alongside the codesign package. The only external
-dependency is [Isaac Gym](https://developer.nvidia.com/isaac-gym), which must be installed
-manually (it is not available on PyPI).
+
+## Installation
 
 ```bash
 conda env create -f environment.yml
@@ -18,9 +18,6 @@ conda activate codesign
 pip install -e .
 ```
 
-A single `pip install -e .` installs three packages — `mups_codesign` (the design optimizer),
-and the vendored `legged_gym` and `rsl_rl` (policy training). A pretrained policy ships in
-`checkpoints/rainbow_v7/`, so the codesign scripts run out of the box.
 
 ## Quick Start
 
@@ -48,7 +45,7 @@ Plot latest optimization trajectory over last collected objective landscape:
 ```bash
 python scripts/plot_landscape.py --policy_id rainbow_v7
 ```
-<img src="docs/opt_traj_overlap_landscape.png" width=500/>
+<!-- <img src="docs/opt_traj_overlap_landscape.png" width=500/> -->
 
 Collect gradient vector field of 2D objective landscape from AD:
 ```bash
@@ -66,7 +63,8 @@ python scripts/plot_gradient_field.py --grad-magnitude 5
 ```
 Use `--grad-magnitude` to scale vector magnitude for minimum overlap.
 
-<img src="docs/gradient_field_ad.png" width=500/>
+<!-- <img src="docs/gradient_field_ad.png" width=500/> -->
+
 
 ## Train a Locomotion Policy
 
