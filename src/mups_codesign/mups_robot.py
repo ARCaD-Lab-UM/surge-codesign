@@ -98,7 +98,6 @@ class MupsRobot:
         return foot_jac
 
     def step_srb_dynamics(self, root_state, dof_state, action):
-        # TODO vz and wy is inaccurate by a lot
 
         # Parse inputs
         pos = root_state[:, :3]  # (x, y, z)

@@ -1,7 +1,6 @@
 # Custom
 *.pth
 *.csv
-AGENTS.md
 *.npz
 *.npy
 *.ipynb
@@ -10,6 +9,14 @@ logs/
 debug_*.py
 evaluation/
 final_results/
+build/
+*.ipynb
+*.drawio
+outcmaes/
+_CMA*.py
+AGENTS.md
+CLAUDE.md
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -151,7 +158,6 @@ celerybeat.pid
 .env
 .envrc
 .venv
-env/
 venv/
 ENV/
 env.bak/

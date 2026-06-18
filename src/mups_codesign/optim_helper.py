@@ -115,7 +115,6 @@ def rollout_control_loop(
         if modify_priv_obs:
             modified_privileged_obs[:, -DesignSpace.PARAM_NUMS:] = srb_env.normalized_design_params
 
-        # TODO: verify this is actually helpful
         # Fill obs with aligned next_state to carry gradients from SRB
         partial_diff_obs_from_srb = torch.cat(
             (
