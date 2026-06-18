@@ -74,8 +74,8 @@ A pretrained policy (`rainbow_v7`) ships in `checkpoints/`, so this step is opti
 your own, use the vendored `legged_gym`:
 
 ```bash
-python src/legged_gym/scripts/train.py --task hopper          # runs saved to logs/hopper/
-python src/legged_gym/scripts/play.py --task hopper           # visualize the latest run
+python scripts/train_policy.py --task hopper   # runs saved to logs/hopper/
+python scripts/play_policy.py --task hopper    # visualize the latest run
 ```
 
 Training runs are written to `logs/hopper/<timestamp>_<run_name>/`. The codesign config loads
