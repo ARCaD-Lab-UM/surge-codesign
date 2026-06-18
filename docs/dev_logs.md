@@ -1,0 +1,29 @@
+# Development Logs
+
+- [x] Fix hardcoded design_param_names in mups_robot.py
+- [x] Unify changeable parameters with design space parameters
+- [x] Fix broken tests and make them unit-testable
+- [x] Fix energy calculation to account for time step correctly
+- [x] Wrap control loop into a rollout function
+- [x] Unify control loop helper for run_codesign and plot_landscape
+- [x] Run a test with 4 dim design space with unchanged policy to see if pipeline works
+- [x] Implement logger to save important statistics during optimization
+- [x] Revamp plot_landscape script to dump one landscape per policy
+- [x] Check if landscape match with previous runs
+- [x] Retry hacked 4 dim optimization and check tensorboard to see if those make sense
+- [x] No need for hopper standalone env and config, instead, use the actual hopper env and config
+- [x] We need to plot the episode trajectory of hopper
+- [x] Retrain policy with 4 dim design space, tune design range if necessary
+- [x] Test NN as an individual block
+- [x] What's the role of num_envs in design optimization? Only matter if any domain rand is on.
+- [x] Make config actually useful
+- [x] Disable awkward printing from isaacgym
+- [x] Add unit tests for FD vs AD
+- [x] Visualize AD gradient field over landscape
+- [x] Visualize FD gradient field over landscape
+- [x] Make rollout_control_loop easier to take different combination of params
+- [x] Start interfacing with CMA-ES
+- [x] Move `evaluate_population()` and `compute_surrogate_gradient()` to `optim_helper.py`
+- [x] Fix injected step calculation
+- [x] Run experiments with different injection number
+- [x] Create a submodule for hopper policy training, prepare for open-source release
