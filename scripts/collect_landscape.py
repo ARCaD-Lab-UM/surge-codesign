@@ -136,7 +136,7 @@ if __name__ == "__main__":
         objective_grid,
         grid_param_names,
         save_path=contour_path,
-        show=True,
+        show=False,
     )
     print(f"Saved contour plot to: {contour_path}")
 
