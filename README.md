@@ -4,6 +4,11 @@
 
 Official implementation of *"SurGE: Surrogate Gradient-guided Evolution for Co-design of Legged Robots with Parallel Elasticity"*.
 
+## TODO
+- [ ] Make sure we have a script to reproduce the main results in the paper
+- [ ] Unify occurrence of naming of hopper e.g. hopper-v2, mups, hopper, mups_v2, etc.
+- [ ] Rename `run_meanshift_es.py` to `run_surge.py`
+- [ ] Setup website in another branch
 
 ## Overview
 
