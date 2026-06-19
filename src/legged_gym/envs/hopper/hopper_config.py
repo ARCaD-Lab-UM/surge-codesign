@@ -75,7 +75,7 @@ class HopperCfg( LeggedRobotCfg ):
 
 
     class asset( LeggedRobotCfg.asset ):
-        file = "{LEGGED_GYM_ROOT_DIR}/assets/hopper-v2/hopper-v2.urdf"
+        file = "{LEGGED_GYM_ROOT_DIR}/assets/mups_v2/mups_v2.urdf"
         name = "hopper"
         foot_name = "Foot"
         penalize_contacts_on = ["Torso", "Thigh", "Shank", "Front_Weight", "Back_Weight"] # "Torso", "Thigh", "Shank", "Foot"
