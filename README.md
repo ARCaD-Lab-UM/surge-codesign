@@ -1,20 +1,33 @@
-# SurGE: Surrogate Gradient-guided Evolution for Co-design of Legged Robots with Parallel Elasticity
+# SurGE
+
+[Paper Link](https://arxiv.org/abs/TODO) | [Project Page](https://silvery107.github.io/surge) | [Video](https://youtu.be/amKPB2cOvBo)
+
+This repository contains the code for our paper "SurGE: Surrogate Gradient-guided Evolution for Co-design of Legged Robots with Parallel Elasticity". 
+
+
+## Overview
 
 <img src="docs/diff_codesign.png" width=900/>
 
-## TODO
-- [x] Add more figures from the paper
-- [x] Add bibtex citation
-- [ ] Update description to a paper-code-release style, i.e. more info about the paper and related medias
-- [ ] Unify naming of the robot, existing names: `hopper`, `mups_robot`, `hopper_v2` ...
+
+SurGE is a co-design framework that combines gradients from surrogate dynamics model with evolutionary search to optimize both the design and control of legged robots with parallel elasticity. 
+
+Our method achieves superior performance compared to pure gradient-based or pure evolutionary approaches, and can effectively navigate complex design landscapes. 
+The codebase includes implementations of the SurGE algorithm, training scripts for locomotion policies, and tools for visualizing design landscapes and optimization trajectories.
 
 
 ## Installation
 
+### Dependencies
+* Ubuntu 22.04
+* Python 3.8
+* Isaac Gym (Preview 4)
+
+### Environment Setup
 ```bash
 conda env create -f environment.yml
 conda activate codesign
-# Install Isaac Gym (Preview 4) into this env per NVIDIA's instructions, then:
+# Install Isaac Gym into this env per NVIDIA's instructions, then:
 pip install -e .
 ```
 
@@ -63,28 +76,33 @@ Use `--grad-magnitude` to scale vector magnitude for minimum overlap.
 
 ## Train a Locomotion Policy
 
-<img src="docs/policy_arch.png" width=500/>
+<img src="docs/policy_arch.png" width=450/>
 
-A pretrained policy (`rainbow_v7`) ships in `checkpoints/`. To train
-your own policy:
+A pretrained policy is shipped in `checkpoints/`. To train
+a new policy:
 
 ```bash
 python scripts/train_policy.py --task hopper   # runs saved to logs/hopper/
 python scripts/play_policy.py --task hopper    # visualize the latest run
 ```
 
-Training runs are written to `logs/hopper/<timestamp>_<run_name>/`. The codesign config loads
-its policy from `<policy_root>/<policy_id>/` (defaults: `policy_root="checkpoints"`,
-`policy_id="rainbow_v7"`). To use a freshly trained policy, set `policy_root="logs/hopper"` and
-`policy_id` to the new run directory name in `src/mups_codesign/config.py`.
+> [!NOTE]  
+> Training runs are logged to `logs/hopper/<timestamp>_<run_name>/`. The codesign config loads its policy from `<policy_root>/<policy_id>/` (defaults: `policy_root="checkpoints"`, `policy_id="rainbow_v7"`). 
+> 
+> To use a freshly trained policy, set `policy_root="logs/hopper"` and `policy_id` to the new run directory name in `src/mups_codesign/config.py`.
+
+
+## Code Structure
+TODO
+
 
 ## Citation
 If you find this code useful for your research, please consider citing our paper:
 ```bibtex
-@inproceedings{zhuang@surge,
+@article{zhuang2026surge,
   title={SurGE: Surrogate Gradient-guided Evolution for Co-design of Legged Robots with Parallel Elasticity},
-  author={},
-  booktitle={},
+  author={Yulun Zhuang, Yue Qin, Justin Lu, Zelin Shen, Yichen Wang, Sicheng He and Yanran Ding},
+  journal={arXiv preprint TODO},
   year={2026}
 }
 ```
