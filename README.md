@@ -4,11 +4,6 @@
 
 Official implementation of *"SurGE: Surrogate Gradient-guided Evolution for Co-design of Legged Robots with Parallel Elasticity"*.
 
-## TODO
-- [ ] Make sure we have a script to reproduce the main results in the paper
-- [ ] Unify occurrence of naming of hopper e.g. hopper-v2, mups, hopper, mups_v2, etc.
-- [ ] Rename `run_meanshift_es.py` to `run_surge.py`
-- [ ] Setup website in another branch
 
 ## Overview
 
@@ -22,6 +17,7 @@ To recover gradient information despite this non-differentiability, SurGE differ
 ## Installation
 
 ### Dependencies
+The code is tested on the following setup:
 * Ubuntu 22.04
 * Python 3.8
 * Isaac Gym (Preview 4)
@@ -38,8 +34,8 @@ To recover gradient information despite this non-differentiability, SurGE differ
    conda env create -f environment.yml
    conda activate codesign
    ```
-3. Install Isaac Gym (Preview 4) into this env per [NVIDIA's instructions](https://developer.nvidia.com/isaac-gym).
-4. Install the co-design code (editable):
+3. Download and install Isaac Gym into this env per [NVIDIA's instructions](https://developer.nvidia.com/isaac-gym).
+4. Install the co-design code:
    ```bash
    pip install -e .
    ```
@@ -49,17 +45,15 @@ The editable install builds all three packages from `src/`: `mups_codesign`, `le
 
 ## Quick Start
 
-A pretrained `checkpoints/rainbow_v7` design-aware policy is provided for quick testing.
-
 ### Co-design with SurGE
 ```bash
-python scripts/run_meanshift_es.py --seed 1
+python scripts/run_surge_codesign.py
 ```
 
 ### Baselines
 
 ```bash
-python scripts/run_codesign.py       # GD
+python scripts/run_gd_codesign.py    # vanilla gradient descent
 python scripts/run_cma_codesign.py   # vanilla CMA-ES
 ```
 
@@ -69,9 +63,8 @@ python scripts/run_cma_codesign.py   # vanilla CMA-ES
 
 ```bash
 python scripts/collect_landscape.py                          # collect objective landscape
-python scripts/collect_gradient_field.py                     # collect gradient field
-python scripts/collect_gradient_field_fd.py                  # collect gradient field (finite difference)
 python scripts/plot_landscape.py --policy_id rainbow_v7      # plot landscape
+python scripts/collect_gradient_field.py                     # collect gradient field
 python scripts/plot_gradient_field.py --grad-magnitude 5     # plot gradient field
 ```
 
@@ -80,14 +73,19 @@ python scripts/plot_gradient_field.py --grad-magnitude 5     # plot gradient fie
 
 <img src="docs/policy_arch.png" width=450/>
 
-A pretrained policy ships in `checkpoints/`. To train a new one:
+Pretrained checkpoints are shipped in `checkpoints/`.
+To visualize a pretrained policy:
 ```bash
-python scripts/train_policy.py --task hopper
-python scripts/play_policy.py --task hopper    # visualize the latest run
+python scripts/play_policy.py --task hopper --load_pretrained_ckpt
+```
+
+To train a new one:
+```bash
+python scripts/train_policy.py --task hopper --headless
 ```
 
 > [!NOTE]
-> To use a freshly trained policy in co-design, set `policy_root="logs/hopper"` and `policy_id` to the new run directory name in `src/mups_codesign/config.py` (defaults: `policy_root="checkpoints"`, `policy_id="rainbow_v7"`).
+> To use a newly trained policy in co-design, set `policy_root="logs/<exp_name>"` and `policy_id="<run_name>"` in `src/mups_codesign/config.py`
 
 
 ## Code Structure
@@ -108,6 +106,7 @@ src/legged_gym/            # customized legged-gym (hopper simulation env)
 src/rsl_rl/                # customized rsl-rl (RL framework)
 ```
 
+
 ## Citation
 
 If you find this code useful for your research, please consider citing our paper:
@@ -118,4 +117,12 @@ If you find this code useful for your research, please consider citing our paper
   journal={arXiv preprint (coming soon)},
   year={2026}
 }
+```
+
+
+## Troubleshooting
+
+If you see an error about missing `libpython3.8.so.1.0` when importing Isaac Gym, copy it from conda lib to isaacgym bindings, i.e.
+```bash
+cp path_to_conda/envs/codesign/lib/libpython3.8.so.1.0 path_to_isaacgym/python/isaacgym/_bindings/linux-x86_64/
 ```
