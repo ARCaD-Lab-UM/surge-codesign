@@ -20,6 +20,7 @@ from mups_codesign.data_logger import DataLogger
 from mups_codesign.design_space import DesignSpace
 from mups_codesign.design_objective import DesignObjective
 from mups_codesign.optim_helper import evaluate_population, setup_isaac_env_and_policy, parse_seed
+from mups_codesign.vis_helper import plot_optimization_history
 
 
 # Set print precision
@@ -99,6 +100,10 @@ if __name__ == '__main__':
     best_params = None
     generation = 0
 
+    # History for the end-of-run optimization plot
+    best_loss_history = []
+    gen_best_params_history = []
+
     # CMA-ES optimization loop
     pbar = tqdm(total=N_DESIGN_ITER, desc="CMA-ES Generation", ncols=80, file=sys.stdout,
                 bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_inv_fmt}]")
@@ -134,7 +139,11 @@ if __name__ == '__main__':
         if gen_best_fitness < best_loss:
             best_loss = gen_best_fitness
             best_params = gen_best_raw.copy()
-        
+
+        # Track history for the end-of-run optimization plot
+        best_loss_history.append(best_loss)
+        gen_best_params_history.append(gen_best_raw)
+
         # Print generation summary
         print("")  # Flush newline after tqdm
         print(f"Generation {generation + 1}/{N_DESIGN_ITER}")
@@ -182,4 +191,13 @@ if __name__ == '__main__':
     # Close logger
     logger.close()
     print(f"Logs saved to {logger.run_dir}")
+
+    #* Plot best-so-far objective and generation-best design parameters
+    plot_optimization_history(
+        best_so_far=best_loss_history,
+        gen_best_params=gen_best_params_history,
+        param_names=list(design_space.active_param_names),
+        save_path=os.path.join(logger.run_dir, "optimization_history.png"),
+        show=True,
+    )
 

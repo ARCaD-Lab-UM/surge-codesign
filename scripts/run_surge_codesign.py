@@ -21,6 +21,7 @@ from mups_codesign.data_logger import DataLogger
 from mups_codesign.design_space import DesignSpace
 from mups_codesign.design_objective import DesignObjective
 from mups_codesign.optim_helper import evaluate_population, compute_surrogate_gradient, setup_isaac_env_and_policy, parse_seed
+from mups_codesign.vis_helper import plot_optimization_history
 
 
 # Set print precision
@@ -29,7 +30,6 @@ torch.set_printoptions(precision=6, sci_mode=False)
 
 
 if __name__ == '__main__':
-    #* Mean-Shift Baseline configuration (overridable via env vars for sweep)
     POPULATION_SIZE = int(os.environ.get('POPULATION_SIZE', '16'))
     SIGMA_INIT = float(os.environ.get('SIGMA_INIT', '0.2'))  # Initial CMA-ES step size
     GRAD_STEP_SIZE = float(os.environ.get('GRAD_STEP_SIZE', '0.1'))
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     N_DESIGN_ITER = design_config.n_design_iter
     N_CONTROL_ITER = design_config.n_control_iter
     n_params = len(design_config.active_param_names)
-    print(f"Mean-Shift Baseline - Generations: {N_DESIGN_ITER}, Control Iterations: {N_CONTROL_ITER}")
+    print(f"Generations: {N_DESIGN_ITER}, Control Iterations: {N_CONTROL_ITER}")
     print(f"Population Size: {POPULATION_SIZE}, Initial Sigma: {SIGMA_INIT}")
     print(f"Mean Shift: step_size={GRAD_STEP_SIZE} (no Mahalanobis clipping)")
     print(f"Gradient Clip Norm: {GRAD_CLIP_NORM}")
@@ -103,6 +103,10 @@ if __name__ == '__main__':
     best_loss = float("inf")
     best_params = None
     generation = 0
+
+    # History for the end-of-run optimization plot
+    best_loss_history = []
+    gen_best_params_history = []
 
     # Cosine step-size decay: GRAD_STEP_SIZE -> 0 at DECAY_END_FRAC of total iterations
     NO_COSINE_DECAY = os.environ.get('NO_COSINE_DECAY', '0') == '1'
@@ -181,6 +185,10 @@ if __name__ == '__main__':
             best_loss = gen_best_fitness
             best_params = gen_best_raw.copy()
 
+        # Track history for the end-of-run optimization plot
+        best_loss_history.append(best_loss)
+        gen_best_params_history.append(gen_best_raw)
+
         # Print generation summary
         print("")
         print(f"Generation {generation + 1}/{N_DESIGN_ITER}")
@@ -227,7 +235,7 @@ if __name__ == '__main__':
     pbar.close()
 
     print("\n" + "="*60)
-    print("Mean-Shift Baseline Design Optimization Completed.")
+    print("SurGE Design Optimization Completed.")
     print(f"Final Best Loss: {best_loss:.4f}")
     print(f"Final Best Parameters: {best_params}")
     print(f"CMA-ES Stop Reason: {es.stop()}")
@@ -235,3 +243,12 @@ if __name__ == '__main__':
 
     logger.close()
     print(f"Logs saved to {logger.run_dir}")
+
+    #* Plot best-so-far objective and generation-best design parameters
+    plot_optimization_history(
+        best_so_far=best_loss_history,
+        gen_best_params=gen_best_params_history,
+        param_names=list(design_space.active_param_names),
+        save_path=os.path.join(logger.run_dir, "optimization_history.png"),
+        show=True,
+    )

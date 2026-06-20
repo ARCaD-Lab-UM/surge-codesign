@@ -149,6 +149,58 @@ def plot_gradient_vector_field(
     plt.close(fig)
 
 
+def plot_optimization_history(
+    best_so_far,
+    gen_best_params,
+    param_names,
+    save_path=None,
+    show=False,
+):
+    """Plot best-so-far design objective alongside generation-best design parameters.
+
+    Args:
+        best_so_far: (n_gen,) best-so-far design objective at each generation.
+        gen_best_params: (n_gen, n_params) generation-best (raw) design parameter values.
+        param_names: list of parameter names matching the columns of gen_best_params.
+        save_path: if given, write the figure here.
+        show: if True, pop up the figure window.
+    """
+    best_so_far = np.asarray(best_so_far, dtype=float)
+    gen_best_params = np.atleast_2d(np.asarray(gen_best_params, dtype=float))
+    generations = np.arange(1, len(best_so_far) + 1)
+
+    n_params = gen_best_params.shape[1]
+    n_rows = 1 + n_params
+    fig, axes = plt.subplots(n_rows, 1, figsize=(9, 2.2 * n_rows), sharex=True)
+    axes = np.atleast_1d(axes)
+
+    # Best-so-far design objective
+    axes[0].plot(generations, best_so_far, color="tab:red", marker="o", markersize=3)
+    axes[0].set_ylabel("Best Objective")
+    axes[0].set_title("Best-so-far Design Objective & Generation-Best Design Parameters")
+    axes[0].grid(True, alpha=0.3)
+
+    # One subplot per design parameter (different units/scales)
+    colors = plt.cm.viridis(np.linspace(0, 0.85, n_params))
+    for i, name in enumerate(param_names):
+        ax = axes[i + 1]
+        ax.plot(generations, gen_best_params[:, i], color=colors[i], marker="o", markersize=3)
+        ax.set_ylabel(name)
+        ax.grid(True, alpha=0.3)
+
+    axes[-1].set_xlabel("Generation")
+
+    fig.tight_layout()
+    if save_path:
+        fig.savefig(save_path)
+        print(f"Saved optimization history to: {save_path}")
+
+    if show:
+        plt.show()
+
+    plt.close(fig)
+
+
 def save_ad_graph(loss, vars:dict, filename="autograd_graph"):
     dot = make_dot(loss, params=vars)
     dot.format = "png"
