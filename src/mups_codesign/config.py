@@ -19,17 +19,14 @@ def default_objective_weights():
 @dataclass
 class CodesignConfig:
     # General config
-    seed: int = 12  # NOTE: seed=0 is treated as "no seed" by pycma (falsy check), use non-zero
+    seed: int = 12  # NOTE: seed=0 is treated as "no seed" by pycma (falsy check), use non-zero seed instead
     num_envs: int = 1024
     device: str = "cuda:0"      # this will be overwritten by isaacgym env.device
     dtype: str = torch.float32  # this only used internally for codesign modules
 
     # RL policy config
     policy_id: str = "rainbow_v7"    # trained with ks, l0, l2, l4 and all in privileged obs
-    # Directory holding policy runs (<policy_root>/<policy_id>/model_*.pt), resolved relative to
-    # the repo root. The shipped pretrained policy lives in checkpoints/rainbow_v7/. To load a
-    # freshly trained policy, set policy_root="logs/hopper" and policy_id to the run dir name.
-    policy_root: str = "checkpoints"
+    policy_root: str = "checkpoints" # use "logs/<exp_name>" for newly trained policies
 
     # Optimizer config
     learning_rate: float = None
@@ -37,14 +34,14 @@ class CodesignConfig:
     n_control_iter: int = None
 
     # Design space config
-    active_param_names: tuple = ("ups_ks", "ups_l0", "ups_l2", "ups_l4") # if None, use all parameters in design space
-    # raw_init_param_values: tuple = (4115, 0.138, 0.1, 0.02)  # if None, use default param values
-    # raw_init_param_values: tuple = (8000, 0.11, 0.13, 0.02)  # if None, use default param values
 
-    # 2D Sweep config
+    # 4D codesign config
+    active_param_names: tuple = ("ups_ks", "ups_l0", "ups_l2", "ups_l4") # if None, use all parameters in design space
+    raw_init_param_values: tuple = (8000, 0.11, 0.13, 0.02)  # if None, use default param values
+
+    # 2D hardware sweep config
     # active_param_names: tuple = ("ups_ks", "ups_l0")
-    # raw_init_param_values: tuple = (2000, 0.1)
-    raw_init_param_values: tuple = None#(8000, 0.1)
+    # raw_init_param_values: tuple = (8000, 0.1)
 
     # MUPS spring config
     softplus_beta: float = 1.0
