@@ -120,26 +120,26 @@
   </div>
 </section>
 
-<section class="hero teaser">
+
+<section class="section">
   <div class="container is-max-desktop">
-    <div class="hero-body">
+
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-three-quarters">
         <div class="publication-video">
           <iframe src="https://www.youtube.com/embed/amKPB2cOvBo?rel=0&amp;showinfo=0"
                   frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
         </div>
-      <h2 class="subtitle has-text-centered">
-        <span class="dnerf">Nerfies</span> turns selfie videos from your phone into
-        free-viewpoint
-        portraits.
-      </h2>
+      </div>
     </div>
+
   </div>
 </section>
 
 
 <section class="section">
   <div class="container is-max-desktop">
-    <!-- Abstract -->
+
     <div class="columns is-centered has-text-centered">
       <div class="column is-four-fifths">
         <h2 class="title is-3">Abstract</h2>
@@ -156,135 +156,81 @@
         </div>
       </div>
     </div>
-    <!--/ Abstract -->
 
-    <!-- Overview -->
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+
     <div class="columns is-centered has-text-centered">
-      <div class="column is-four-fifths">
+      <div class="column is-full">
         <h2 class="title is-3">SurGE for Legged Robots</h2>
+        <div class="content has-text-justified">
+          <p>
+            SurGE is a framework for co-design of legged robots with parallel elasticity. It computes surrogate gradients of the design objective through a differentiable pipeline consisting of a kinodynamic single-rigid-body (Kino-SRB) model and a design-aware control policy, and injects them into CMA-ES via mean shift with cosine-annealed step decay.
+          </p>
+        </div>
         <img src="./static/images/diff_codesign.png">
       </div>
     </div>
-    <!--/ Overview -->
 
+  </div>
 </section>
 
 
 <section class="section">
   <div class="container is-max-desktop">
 
-    <!-- Design-aware Policy -->
-    <div class="columns is-centered">
-      <div class="column">
-        <div class="content">
-          <h2 class="title is-3">Design-Aware Policy</h2>
-          <p>
-            TODO
-          </p>
-          <img src="./static/images/policy_arch.png" height="100%"/>
-        </div>
-      </div>
-
-      <div class="column">
-        <h2 class="title is-3">Kino-SRB Model</h2>
-        <div class="columns is-centered">
-          <div class="column content">
-            <p>
-              TODO
-            </p>
-          </div>
-
-        </div>
-      </div>
-    </div>
-    <!--/ Design-aware Policy -->
-
     <div class="columns is-centered has-text-centered">
-      <div class="column is-four-fifths">
+      <div class="column is-full">
         <h2 class="title is-3">SurGE for MUPS</h2>
-        <img src="./static/images/mups_v2.jpg" width="500"/>
-      </div>
-    </div>
-
-    <!-- Hardware Experiment -->
-    <div class="columns is-centered">
-      <div class="column">
-        <div class="content">
-          <h2 class="title is-3">UPS Design</h2>
+        <div class="content has-text-justified">
           <p>
-            TODO
+            We apply SurGE to the co-design of a hopping robot with unidirectional parallel spring (MUPS). The design space consists of 4 parameters: the spring stiffness, the spring engagement angle, the leg length, and the leg mass. The design objective is to minimize the cost of transport (CoT) while maintaining a target hopping height. SurGE computes surrogate gradients of the CoT through a differentiable pipeline and injects them into CMA-ES to guide the search for optimal designs.
           </p>
-          <img src="./static/images/PEA_leg_assem_final.gif" height="100%" style="transform: scaleX(-1);"/>
-        </div>
-      </div>
-
-      <div class="column">
-        <h2 class="title is-3">TODO</h2>
-        <div class="columns is-centered">
-          <div class="column content">
-            <p>
-              TODO
-            </p>
-          </div>
-
         </div>
       </div>
     </div>
-    <!--/ Hardware Experiment -->
 
-    <!-- 4D Design Optimization -->
     <div class="columns is-centered">
-      <div class="column">
-        <div class="content">
-          <h2 class="title is-3">Simulation Experiment</h2>
-          <p>
-            TODO
-          </p>
-          <img src="./static/images/convergence_bsf_cma_vs_ms01d100_v2.png" height="100%"/>
-        </div>
-      </div>
-
-      <div class="column">
-        <h2 class="title is-3">TODO</h2>
+      <div class="column is-full">
         <div class="columns is-centered">
-          <div class="column content">
-            <p>
-              TODO
-            </p>
-            <img src="./static/images/design_params_cma_vs_ms01d100_v2.png" height="100%"/>
+          <div class="column is-6 has-text-centered">
+            <div class="publication-video">
+              <img src="./static/images/policy_arch.png"/>
+            </div>
+            <p class="mt-2">Architecture of the design-aware policy</p>
           </div>
-
+          <div class="column is-6 has-text-centered">
+            <div class="publication-video">
+              <img src="./static/images/kino_srb.png"/>
+            </div>
+            <p class="mt-2">The kinodynamic single rigid body model</p>
+          </div>
         </div>
       </div>
     </div>
-    <!--/ 4D Design Optimization -->
 
-    <!-- Hardware Experiment-->
     <div class="columns is-centered">
-      <div class="column">
-        <div class="content">
-          <h2 class="title is-3">Simulation Experiment</h2>
-          <p>
-            TODO
-          </p>
-          <img src="./static/images/landscape_combined.png" height="100%"/>
-        </div>
-      </div>
-
-      <div class="column">
-        <h2 class="title is-3">TODO</h2>
+      <div class="column is-full">
         <div class="columns is-centered">
-          <div class="column content">
-            <p>
-              TODO
-            </p>
-            <!-- <img src="./static/images/landscape_combined.png" height="100%"/> -->
+          <div class="column is-6 has-text-centered">
+            <div class="publication-video">
+              <img src="./static/images/mups_v2.jpg"/>
+            </div>
+            <p class="mt-2">The Monoped with Unidirectional Parallel Spring (MUPS)</p>
           </div>
-
+          <div class="column is-6 has-text-centered">
+            <div class="publication-video">
+              <img src="./static/images/PEA_leg_assem_final.gif" style="transform: scaleX(-1);"/>
+            </div>
+            <p class="mt-2">Mechanism animation of the UPS</p>
+          </div>
         </div>
       </div>
     </div>
-    <!--/ Hardware Experiment -->
+
   </div>
 </section>
 
