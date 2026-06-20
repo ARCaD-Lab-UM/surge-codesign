@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
-     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
-     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
 <robot
-  name="leg_foot">
+  name="mups_v2">
+
+  <!-- Materials -->
+  <material name="silver_aluminum">
+    <color rgba="0.75 0.75 0.78 1" />
+  </material>
+  <material name="black_aluminum">
+    <color rgba="0.15 0.15 0.15 1" />
+  </material>
+  <material name="black_rubber">
+    <color rgba="0.05 0.05 0.05 1" />
+  </material>
 
   <link
     name="Torso">
@@ -13,16 +21,6 @@
         rpy="0 0 0" />
       <mass
         value="0.691606304075024" />
-
-      <!-- Hopper V1 Numbers -->
-      <!-- <inertia
-        ixx="0.001"
-        iyy="0.04"
-        izz="0.04"
-        ixy="0"
-        ixz="0"
-        iyz="0" 
-        /> -->
 
       <!-- Original Inertia Values -->
       <inertia
@@ -42,11 +40,7 @@
         <mesh
           filename="meshes/Torso.STL" />
       </geometry>
-      <material
-        name="">
-        <color
-          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
-      </material>
+      <material name="silver_aluminum" />
     </visual>
     <collision>
       <origin
@@ -76,8 +70,7 @@
       <geometry>
         <cylinder radius="0.04" length="0.02" />
       </geometry>
-      <material name="weights_material">
-      </material>
+      <material name="black_aluminum" />
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
@@ -111,7 +104,7 @@
       <geometry>
         <cylinder radius="0.04" length="0.02" />
       </geometry>
-      <material name="weights_material" />
+      <material name="black_aluminum" />
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
@@ -152,11 +145,7 @@
         <mesh
           filename="meshes/Thigh.STL" />
       </geometry>
-      <material
-        name="">
-        <color
-          rgba="0.776470588235294 0.756862745098039 0.737254901960784 1" />
-      </material>
+      <material name="silver_aluminum" />
     </visual>
     <collision>
       <origin
@@ -211,11 +200,7 @@
         <mesh
           filename="meshes/Shank.STL" />
       </geometry>
-      <material
-        name="">
-        <color
-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
-      </material>
+      <material name="silver_aluminum" />
     </visual>
     <collision>
       <origin
@@ -268,13 +253,9 @@
         rpy="0 0 0" />
       <geometry>
         <sphere
-          radius=".02" />
+          radius=".021" />
       </geometry>
-      <material
-        name="">
-        <color
-          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
-      </material>
+      <material name="black_rubber" />
     </visual>
     <!-- <collision>
       <origin
@@ -290,7 +271,7 @@
         xyz="0 0 0"
         rpy="1.5708 0 0" />
       <geometry>
-        <cylinder radius="0.02" length="0.2" />
+        <cylinder radius="0.02" length="0.05" />
       </geometry>
     </collision>
   </link>

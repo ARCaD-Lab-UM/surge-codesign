@@ -13,7 +13,7 @@ class HopperRobot(LeggedRobot):
         super().__init__(cfg, sim_params, physics_engine, sim_device, headless)
         self.phase = torch.zeros(self.num_envs, device=self.device)
         self.set_design_params()
-        self.debug_viz = True
+        self.debug_viz = False
 
     def _get_noise_scale_vec(self, cfg):
         """ Sets a vector used to scale the noise added to the observations.
