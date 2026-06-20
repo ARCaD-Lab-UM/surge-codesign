@@ -1,6 +1,6 @@
 # SurGE
 
-[**Paper**]() (coming soon) | [**Project Page**]() (coming soon) | [**Video**](https://youtu.be/amKPB2cOvBo)
+[**Paper**]() (coming soon) | [**Project Page**](https://arcad-lab-um.github.io/surge-codesign/) | [**Video**](https://youtu.be/amKPB2cOvBo)
 
 Official implementation of *"SurGE: Surrogate Gradient-guided Evolution for Co-design of Legged Robots with Parallel Elasticity"*.
 
