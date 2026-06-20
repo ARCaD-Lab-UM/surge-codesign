@@ -145,13 +145,13 @@
         <h2 class="title is-3">Abstract</h2>
         <div class="content has-text-justified">
           <p>
-            Co-design of legged robots with elastic elements is challenging due to the non-differentiability of contact dynamics and mechanism engagement. We presents SurGE, a framework that computes surrogate gradients of the design objective through a differentiable pipeline consisting of a kinodynamic single-rigid-body (Kino-SRB) model and a design-aware control policy, and injects them into CMA-ES via mean shift with cosine-annealed step decay.
+            Adding springs to legged robots can cut their energy use, but the benefit depends on both how the spring is designed and how the controller uses it, so the two must be designed together. This joint co-design is difficult because foot contact and spring engagement make the problem non-smooth, which blocks standard gradient-based optimization.
           </p>
           <p>
-            On a 4-DOF design space of a hopping robot with unidirectional parallel spring, SurGE achieves 6 times lower cross-seed standard deviation and 18% tighter population concentration compared to vanilla CMA-ES, while matching or improving the best objective. 
+            We present SurGE, a framework that combines an evolutionary search with an approximate gradient. The gradient comes from a simplified, differentiable model of the robot paired with a single control policy that adapts to any design. It steers the search toward promising designs early on, while every candidate is still evaluated in a high-fidelity simulator to keep the search grounded.
           </p>
           <p>
-            Hardware experiments on a 2D design subspace show that, starting from a hand-tuned initial design, SurGE reduces the design objective by 37.65% on hardware, with the improvement trend identified in simulation transferring consistently to the physical system. SurGE provides the potential to accelerate non-differentiable co-design problems in legged robots via surrogate model gradients.
+            On a hopping robot with a parallel spring, SurGE matches or improves the best design found by standard evolutionary search while converging far more reliably, with about 6 times less variation across random seeds. On hardware, it refines a hand-tuned design by 37.65%, and the gains seen in simulation transfer consistently to the real robot.
           </p>
         </div>
       </div>
@@ -168,7 +168,7 @@
         <h2 class="title is-3">SurGE for Legged Robots</h2>
         <div class="content has-text-justified">
           <p>
-            SurGE is a framework for co-design of legged robots with parallel elasticity. It computes surrogate gradients of the design objective through a differentiable pipeline consisting of a kinodynamic single-rigid-body (Kino-SRB) model and a design-aware control policy, and injects them into CMA-ES via mean shift with cosine-annealed step decay.
+            SurGE jointly optimizes a robot's physical design and its controller. The key idea is to guide a population-based evolutionary search with gradient information, even when the true dynamics are not differentiable. A lightweight differentiable model of the robot, paired with a single control policy that adapts to any design, produces an approximate (surrogate) gradient that points the search toward better designs. Because this gradient is only approximate, every candidate is still scored in a high-fidelity simulator, and the gradient's influence is gradually faded out so the search settles cleanly on a final design.
           </p>
         </div>
         <img src="./static/images/diff_codesign.png">
@@ -187,7 +187,7 @@
         <h2 class="title is-3">SurGE for MUPS</h2>
         <div class="content has-text-justified">
           <p>
-            We apply SurGE to the co-design of a hopping robot with unidirectional parallel spring (MUPS). The design space consists of 4 parameters: the spring stiffness, the spring engagement angle, the leg length, and the leg mass. The design objective is to minimize the cost of transport (CoT) while maintaining a target hopping height. SurGE computes surrogate gradients of the CoT through a differentiable pipeline and injects them into CMA-ES to guide the search for optimal designs.
+            We test SurGE on MUPS v2, a one-legged hopping robot whose parallel spring can be physically tuned through four design parameters (spring stiffness, engagement length, and two linkage lengths). The goal is to find a spring-and-controller combination that hops at a target height and speed while using as little energy as possible. SurGE refines a hand-tuned starting design into a more efficient one, and the improvement holds up on the real robot: the hopping cost drops 37.65% on hardware, closely matching the trend predicted in simulation.
           </p>
         </div>
       </div>
