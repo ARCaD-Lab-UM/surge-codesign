@@ -1,10 +1,10 @@
 import pytest
 import torch
 
-from mups_codesign.config import CodesignConfig
-from mups_codesign.design_objective import DesignObjective
-from mups_codesign.design_space import DesignSpace
-from mups_codesign.mups_robot import MupsRobot
+from surge_codesign.config import CodesignConfig
+from surge_codesign.design_objective import DesignObjective
+from surge_codesign.design_space import DesignSpace
+from surge_codesign.mups_robot import MupsRobot
 
 
 def compute_fd_grad(loss_fn, params, eps=1e-6):

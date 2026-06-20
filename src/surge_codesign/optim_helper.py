@@ -17,11 +17,11 @@ from legged_gym.utils import get_args, task_registry
 from legged_gym.utils.task_registry import TaskRegistry
 from torch import nn
 
-from mups_codesign.config import CodesignConfig
-from mups_codesign.data_logger import DataLogger
-from mups_codesign.design_objective import DesignObjective
-from mups_codesign.design_space import DesignSpace
-from mups_codesign.mups_robot import MupsRobot
+from surge_codesign.config import CodesignConfig
+from surge_codesign.data_logger import DataLogger
+from surge_codesign.design_objective import DesignObjective
+from surge_codesign.design_space import DesignSpace
+from surge_codesign.mups_robot import MupsRobot
 
 
 def parse_seed():

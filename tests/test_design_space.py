@@ -1,7 +1,7 @@
 import torch
 
-from mups_codesign.config import CodesignConfig
-from mups_codesign.design_space import DesignSpace
+from surge_codesign.config import CodesignConfig
+from surge_codesign.design_space import DesignSpace
 
 
 def _make_config(active_param_names=("ups_ks", "ups_l0")):

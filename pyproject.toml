@@ -3,11 +3,11 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mups-codesign"
+name = "surge-codesign"
 version = "0.1.0"
-description = "Differentiable co-design for the MUPS hopping robot"
+description = "SurGE: surrogate gradient-guided evolution for co-design of legged robots with parallel elasticity"
 requires-python = ">=3.8"
 
 [tool.setuptools.packages.find]
-# Discovers the three sibling packages under src/: mups_codesign, legged_gym, rsl_rl.
+# Discovers the three sibling packages under src/: surge_codesign, legged_gym, rsl_rl.
 where = ["src"]

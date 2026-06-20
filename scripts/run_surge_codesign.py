@@ -15,13 +15,13 @@ from cma import CMAEvolutionStrategy
 from legged_gym import LEGGED_GYM_ROOT_DIR
 from legged_gym.envs import *
 
-from mups_codesign.mups_robot import MupsRobot
-from mups_codesign.config import CodesignConfig
-from mups_codesign.data_logger import DataLogger
-from mups_codesign.design_space import DesignSpace
-from mups_codesign.design_objective import DesignObjective
-from mups_codesign.optim_helper import evaluate_population, compute_surrogate_gradient, setup_isaac_env_and_policy, parse_seed
-from mups_codesign.vis_helper import plot_optimization_history
+from surge_codesign.mups_robot import MupsRobot
+from surge_codesign.config import CodesignConfig
+from surge_codesign.data_logger import DataLogger
+from surge_codesign.design_space import DesignSpace
+from surge_codesign.design_objective import DesignObjective
+from surge_codesign.optim_helper import evaluate_population, compute_surrogate_gradient, setup_isaac_env_and_policy, parse_seed
+from surge_codesign.vis_helper import plot_optimization_history
 
 
 # Set print precision
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     srb_env = MupsRobot(design_config)
     design_objective_calculator = DesignObjective(design_config)
     design_space = DesignSpace(design_config, requires_grad=True)
-    logger = DataLogger(root_dir=design_config.log_dir, run_name="hopper_codesign_meanshift")
+    logger = DataLogger(root_dir=design_config.log_dir, run_name="hopper_codesign_surge")
 
     #* Setup CMA-ES optimizer
     init_normalized = design_space.active_normalized_param_values.detach().cpu().numpy()
@@ -91,7 +91,7 @@ if __name__ == '__main__':
         "param_names": list(design_space.active_param_names),
         "n_design_iter": N_DESIGN_ITER,
         "n_control_iter": N_CONTROL_ITER,
-        "meanshift": {
+        "surge": {
             "population_size": POPULATION_SIZE,
             "sigma_init": SIGMA_INIT,
             "grad_step_size": GRAD_STEP_SIZE,
@@ -119,7 +119,7 @@ if __name__ == '__main__':
             return 0.0
         return GRAD_STEP_SIZE * 0.5 * (1.0 + np.cos(np.pi * gen / DECAY_END))
 
-    pbar = tqdm(total=N_DESIGN_ITER, desc="MeanShift Generation", ncols=80, file=sys.stdout, 
+    pbar = tqdm(total=N_DESIGN_ITER, desc="SurGE Generation", ncols=80, file=sys.stdout,
                 bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_inv_fmt}]")
 
     while not es.stop():

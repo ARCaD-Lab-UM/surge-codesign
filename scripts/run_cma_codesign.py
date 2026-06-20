@@ -14,13 +14,13 @@ from cma import CMAEvolutionStrategy
 from legged_gym import LEGGED_GYM_ROOT_DIR
 from legged_gym.envs import *
 
-from mups_codesign.mups_robot import MupsRobot
-from mups_codesign.config import CodesignConfig
-from mups_codesign.data_logger import DataLogger
-from mups_codesign.design_space import DesignSpace
-from mups_codesign.design_objective import DesignObjective
-from mups_codesign.optim_helper import evaluate_population, setup_isaac_env_and_policy, parse_seed
-from mups_codesign.vis_helper import plot_optimization_history
+from surge_codesign.mups_robot import MupsRobot
+from surge_codesign.config import CodesignConfig
+from surge_codesign.data_logger import DataLogger
+from surge_codesign.design_space import DesignSpace
+from surge_codesign.design_objective import DesignObjective
+from surge_codesign.optim_helper import evaluate_population, setup_isaac_env_and_policy, parse_seed
+from surge_codesign.vis_helper import plot_optimization_history
 
 
 # Set print precision

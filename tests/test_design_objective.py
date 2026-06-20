@@ -1,8 +1,8 @@
 import pytest
 import torch
 
-from mups_codesign.config import CodesignConfig
-from mups_codesign.design_objective import DesignObjective
+from surge_codesign.config import CodesignConfig
+from surge_codesign.design_objective import DesignObjective
 
 
 @pytest.mark.parametrize("use_log1p", [True, False])

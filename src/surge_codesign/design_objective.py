@@ -1,6 +1,6 @@
 import torch
 
-from mups_codesign.config import CodesignConfig
+from surge_codesign.config import CodesignConfig
 
 
 class DesignObjective:

@@ -1,9 +1,9 @@
 import pytest
 import torch
 
-from mups_codesign.config import CodesignConfig
-from mups_codesign.design_space import DesignSpace
-from mups_codesign.mups_spring import MupsSpring
+from surge_codesign.config import CodesignConfig
+from surge_codesign.design_space import DesignSpace
+from surge_codesign.mups_spring import MupsSpring
 
 
 def test_spring_torque_requires_grad():

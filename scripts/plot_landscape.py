@@ -4,8 +4,8 @@ import argparse
 
 import numpy as np
 
-from mups_codesign.data_logger import load_run
-from mups_codesign.vis_helper import plot_contour, plot_surface
+from surge_codesign.data_logger import load_run
+from surge_codesign.vis_helper import plot_contour, plot_surface
 
 
 def _find_latest_landscape(landscape_dir, task, policy_tag):

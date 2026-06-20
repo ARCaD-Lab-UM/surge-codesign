@@ -26,8 +26,8 @@ The code is tested on the following setup:
 
 1. Clone the repo:
    ```bash
-   git clone https://github.com/ARCaD-Lab-UM/mups-codesign.git
-   cd mups-codesign
+   git clone https://github.com/ARCaD-Lab-UM/surge-codesign.git
+   cd surge-codesign
    ```
 2. Create and activate the conda environment:
    ```bash
@@ -40,7 +40,7 @@ The code is tested on the following setup:
    pip install -e .
    ```
 
-The editable install builds all three packages from `src/`: `mups_codesign`, `legged_gym`, and `rsl_rl`.
+The editable install builds all three packages from `src/`: `surge_codesign`, `legged_gym`, and `rsl_rl`.
 
 
 ## Quick Start
@@ -85,15 +85,15 @@ python scripts/train_policy.py --task hopper --headless
 ```
 
 > [!NOTE]
-> To use a newly trained policy in co-design, set `policy_root="logs/<exp_name>"` and `policy_id="<run_name>"` in `src/mups_codesign/config.py`
+> To use a newly trained policy in co-design, set `policy_root="logs/<exp_name>"` and `policy_id="<run_name>"` in `src/surge_codesign/config.py`
 
 
 ## Code Structure
 
-The co-design logic lives in `src/mups_codesign/`, alongside our customized RL framework.
+The co-design logic lives in `src/surge_codesign/`, alongside our customized RL framework.
 
 ```
-src/mups_codesign/         # core co-design package
+src/surge_codesign/         # core co-design package
   config.py                # configuration
   design_space.py          # design parameters and bounds
   design_objective.py      # design objective

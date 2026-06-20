@@ -12,7 +12,7 @@ import sys
 
 import numpy as np
 
-from mups_codesign.vis_helper import plot_gradient_vector_field
+from surge_codesign.vis_helper import plot_gradient_vector_field
 
 
 def find_latest_gradient_field(gradient_field_dir="logs/gradient_fields"):

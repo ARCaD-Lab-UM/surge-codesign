@@ -5,7 +5,7 @@ Single source of truth for design parameters: names, defaults, bounds, scaling, 
 import torch
 import torch.nn as nn
 
-from mups_codesign.config import CodesignConfig
+from surge_codesign.config import CodesignConfig
 
 
 class DesignSpace:

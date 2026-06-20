@@ -13,8 +13,8 @@ import pytest
 import torch
 import torch.nn as nn
 
-from mups_codesign.config import CodesignConfig
-from mups_codesign.design_space import DesignSpace
+from surge_codesign.config import CodesignConfig
+from surge_codesign.design_space import DesignSpace
 
 
 def make_simple_policy(obs_dim, priv_obs_dim, action_dim, hidden_dims=(64, 32), dtype=torch.float64):
