@@ -1,5 +1,6 @@
 from legged_gym import LEGGED_GYM_ROOT_DIR
 import os
+import sys
 
 import isaacgym
 from legged_gym.envs import *
@@ -30,8 +31,17 @@ def play(args):
     env, _ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
 
     # Load inference policy
-    train_cfg.runner.resume = True
-    ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args, train_cfg=train_cfg)
+    if args.load_pretrained_ckpt:
+        # Special case: load a pretrained checkpoint directly from a path under the project root,
+        # bypassing the default logs/<experiment_name>/<run_name> lookup.
+        train_cfg.runner.resume = False  # prevent make_alg_runner from loading from logs
+        ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args, train_cfg=train_cfg)
+        resume_path = os.path.join(LEGGED_GYM_ROOT_DIR, PRETRAINED_CKPT_PATH)
+        print(f"Loading model from: {resume_path}")
+        ppo_runner.load(resume_path)
+    else:
+        train_cfg.runner.resume = True
+        ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args, train_cfg=train_cfg)
     inference_policy = ppo_runner.get_inference_policy(device=env.device)
     
     # Export policy (and adaptation module) as jit module
@@ -114,8 +124,13 @@ def play(args):
 
 if __name__ == '__main__':
     SHOW_PLOTS = False
-    EXPORT_POLICY = True
+    EXPORT_POLICY = False
     RECORD_FRAMES = False
     MOVE_CAMERA = False
+    PRETRAINED_CKPT_PATH = 'checkpoints/rainbow_v7/model_1000.pt'
+    load_pretrained_ckpt = '--load_pretrained_ckpt' in sys.argv
+    if load_pretrained_ckpt:
+        sys.argv.remove('--load_pretrained_ckpt')
     args = get_args()
+    args.load_pretrained_ckpt = load_pretrained_ckpt
     play(args)

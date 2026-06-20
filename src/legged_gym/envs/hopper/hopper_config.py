@@ -193,8 +193,8 @@ class HopperCfgPPO( LeggedRobotCfgPPO ):
 
     class runner( LeggedRobotCfgPPO.runner ):
         # names
-        run_name = 'hopper-v11'
-        experiment_name = 'hopper'
+        run_name = 'rainbow_v7'
+        experiment_name = 'velocity_flat_mups_v2'
 
         # training params
         max_iterations = 1000
