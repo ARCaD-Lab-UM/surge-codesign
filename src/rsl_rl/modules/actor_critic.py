@@ -71,8 +71,6 @@ class ActorCritic(nn.Module):
         print(f"num_critic_obs: {self.num_critic_obs}")
         print(f"num_estimated_obs: {self.num_estimated_obs}")
         print(f"num_scan_obs: {self.num_scan_obs}")
-        if self.num_scan_obs == 0:
-            print("⚠️  SCAN ENCODER DISABLED! self.scan_encoder = None...")
         print(f"history_buffer_length: {self.history_buffer_length}")
         print(f"num_actions: {self.num_actions}")
         print("===========================================================\n")

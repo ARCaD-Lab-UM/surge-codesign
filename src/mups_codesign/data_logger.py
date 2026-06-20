@@ -9,7 +9,6 @@ from dataclasses import asdict, is_dataclass
 from typing import Any, Dict, Optional
 
 import numpy as np
-from torch.utils.tensorboard import SummaryWriter
 
 
 def _to_numpy(value: Any) -> Any:
@@ -201,6 +200,9 @@ class DataLogger:
     
     def _get_tb_writer(self):
         if self._tb_writer is None:
+            # Local import: keeps read-only log loading (load_run) torch-free.
+            from torch.utils.tensorboard import SummaryWriter
+
             tb_dir = os.path.join(self.run_dir, "tensorboard")
             self._tb_writer = SummaryWriter(tb_dir)
 
