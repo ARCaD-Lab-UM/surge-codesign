@@ -1,6 +1,6 @@
 # SurGE
 
-[**Paper**]() (coming soon) | [**Project Page**](https://arcad-lab-um.github.io/surge-codesign/) | [**Video**](https://youtu.be/amKPB2cOvBo)
+[**Paper**](https://arxiv.org/abs/2606.21866) | [**Project Page**](https://arcad-lab-um.github.io/surge-codesign/) | [**Video**](https://youtu.be/amKPB2cOvBo)
 
 Official implementation of *"SurGE: Surrogate Gradient-guided Evolution for Co-design of Legged Robots with Parallel Elasticity"*.
 
@@ -113,8 +113,8 @@ If you find this code useful for your research, please consider citing our paper
 ```bibtex
 @article{zhuang2026surge,
   title={SurGE: Surrogate Gradient-guided Evolution for Co-design of Legged Robots with Parallel Elasticity},
-  author={Yulun Zhuang, Yue Qin, Justin Lu, Zelin Shen, Yichen Wang, Sicheng He and Yanran Ding},
-  journal={arXiv preprint (coming soon)},
+  author={Yulun Zhuang and Yue Qin and Justin Lu and Zelin Shen and Yichen Wang and Sicheng He and Yanran Ding},
+  journal={arXiv preprint arXiv 2606.21866},
   year={2026}
 }
 ```
